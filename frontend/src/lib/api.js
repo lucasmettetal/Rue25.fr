@@ -1,4 +1,4 @@
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
 function getAdminToken() {
   return localStorage.getItem('rue25_token');
