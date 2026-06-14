@@ -10,7 +10,13 @@ import customOrderRoutes from './routes/customOrders.js';
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+const allowedOrigins = [
+  process.env.CLIENT_URL || 'http://localhost:5173',
+  'https://rue25.fr',
+  'https://www.rue25.fr',
+  'https://rue25.lucas-mettetal2.workers.dev',
+];
+app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)) }));
 
 // Le webhook Stripe nécessite le body brut — doit être monté avant express.json()
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
