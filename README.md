@@ -64,14 +64,6 @@ npm run dev          # http://localhost:5173
 
 ---
 
-## Comptes par défaut (après seed)
-
-| Rôle  | Email            | Mot de passe |
-|-------|------------------|--------------|
-| Admin | admin@rue25.fr   | admin25      |
-
----
-
 ## Variables d'environnement
 
 Copiez `.env.example` en `.env` et remplissez les valeurs.
