@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  firstName String?   @map("first_name")
+  lastName  String?   @map("last_name")
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  orders    Order[]
+  addresses Address[]
+
+  @@map("users")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?  @map("image_url")
+  inStock     Boolean  @default(true) @map("in_stock")
+  sizes       String[]
+  materials   String[]
+  categoryId  Int      @map("category_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// status uses French strings: nouveau | en cours | livré | annulé
+model Order {
+  id            Int      @id @default(autoincrement())
+  reference     String   @unique
+  status        String   @default("nouveau")
+  total         Decimal  @db.Decimal(10, 2)
+  customerName  String   @map("customer_name")
+  customerEmail String   @map("customer_email")
+  userId        Int?     @map("user_id")
+  addressId     Int?     @map("address_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user    User?       @relation(fields: [userId], references: [id])
+  address Address?    @relation(fields: [addressId], references: [id])
+  items   OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int     @map("order_id")
+  productId Int     @map("product_id")
+  name      String
+  price     Decimal @db.Decimal(10, 2)
+  size      String?
+  quantity  Int     @default(1)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+// status: nouveau | en étude | devis envoyé | accepté | en création | terminé | annulé
+model CustomOrder {
+  id           Int      @id @default(autoincrement())
+  reference    String   @unique
+  status       String   @default("nouveau")
+  name         String
+  email        String
+  phone        String?
+  garmentType  String   @map("garment_type")
+  description  String
+  chest        String?
+  waist        String?
+  hips         String?
+  height       String?
+  inseam       String?
+  materials    String?
+  budget       String?
+  timeline     String?
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("custom_orders")
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  street     String
+  city       String
+  postalCode String   @map("postal_code")
+  country    String   @default("France")
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@map("addresses")
+}
