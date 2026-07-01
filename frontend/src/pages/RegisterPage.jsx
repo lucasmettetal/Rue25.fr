@@ -47,7 +47,7 @@ export default function RegisterPage() {
         <div className="bg-white border border-stone p-10">
           <p className="text-[12px] tracking-[0.15em] uppercase text-muted mb-7 text-center">Inscription</p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Prénom</label>
                 <input value={form.firstName} onChange={set('firstName')} className="w-full px-4 py-2.5" placeholder="Marie" />

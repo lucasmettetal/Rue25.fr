@@ -164,12 +164,12 @@ export default function SurMesurePage() {
               {/* Submit */}
               <div className="md:col-span-2 border-t border-stone pt-8">
                 {error && <p className="text-xs text-red-600 mb-4">{error}</p>}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                   <p className="text-xs text-muted max-w-sm leading-relaxed">
                     Nous vous répondrons sous 48h avec une estimation et les prochaines étapes.
                   </p>
                   <button type="submit" disabled={loading}
-                    className="bg-dark text-white text-[12px] tracking-widest uppercase px-10 py-4 disabled:opacity-50 hover:bg-dark/90 transition-colors">
+                    className="bg-dark text-white text-[12px] tracking-widest uppercase px-10 py-4 disabled:opacity-50 hover:bg-dark/90 transition-colors whitespace-nowrap">
                     {loading ? '…' : 'Envoyer ma demande →'}
                   </button>
                 </div>

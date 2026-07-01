@@ -11,11 +11,11 @@ export default function ProductModal({ product, onClose }) {
   }
 
   return (
-    <div onClick={onClose} className="fixed inset-0 bg-dark/60 z-50 flex items-center justify-center p-6">
+    <div onClick={onClose} className="fixed inset-0 bg-dark/60 z-50 flex items-end md:items-center justify-center md:p-6">
       <div onClick={e => e.stopPropagation()}
-        className="fade-up bg-white max-w-3xl w-full max-h-[90vh] overflow-auto grid md:grid-cols-2">
-        <img src={product.image_url} alt={product.name} className="w-full aspect-[3/4] object-cover" />
-        <div className="p-10 flex flex-col justify-between">
+        className="fade-up bg-white w-full max-w-3xl max-h-[92vh] overflow-auto grid md:grid-cols-2">
+        <img src={product.image_url} alt={product.name} className="w-full aspect-[16/9] md:aspect-[3/4] object-cover" />
+        <div className="p-6 md:p-10 flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start mb-6">
               <div>
