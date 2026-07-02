@@ -50,6 +50,7 @@ model Product {
   price       Decimal  @db.Decimal(10, 2)
   imageUrl    String?  @map("image_url")
   inStock     Boolean  @default(true) @map("in_stock")
+  quantity    Int      @default(0)
   sizes       String[]
   materials   String[]
   categoryId  Int      @map("category_id")

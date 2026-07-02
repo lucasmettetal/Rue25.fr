@@ -296,7 +296,8 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
           <span className="text-sm font-medium">{product.name}</span>
           <span className="text-sm text-accent font-medium">{Number(product.price).toFixed(2)} €</span>
         </div>
-        <p className="text-xs text-muted mb-4">{product.category}</p>
+        <p className="text-xs text-muted mb-2">{product.category}</p>
+        <p className="text-xs text-muted mb-4">Quantité disponible : {product.quantity ?? 0}</p>
         <div className="flex gap-2">
           <button onClick={onEdit} className="flex-1 border border-stone text-xs uppercase tracking-widest py-2 text-muted hover:border-dark">Modifier</button>
           <button onClick={onToggleStock} className="flex-1 border border-stone text-xs uppercase tracking-widest py-2 text-muted hover:border-dark">
@@ -310,8 +311,8 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
 }
 
 function ProductForm({ product, onClose, onSave }) {
-  const blank = { name: '', description: '', price: '', category: 'Chemises', image_url: '', in_stock: true, sizes: [], materials: [] };
-  const [form, setForm]       = useState(product ? { ...product, price: product.price?.toString() } : blank);
+  const blank = { name: '', description: '', price: '', category: 'Chemises', image_url: '', in_stock: true, quantity: 0, sizes: [], materials: [] };
+  const [form, setForm]       = useState(product ? { ...product, price: product.price?.toString(), quantity: product.quantity ?? 0 } : blank);
   const [matInput, setMatInput] = useState('');
   const [sizeInput, setSizeInput] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -322,11 +323,12 @@ function ProductForm({ product, onClose, onSave }) {
   function removeTag(field, i) { set(field, form[field].filter((_, idx) => idx !== i)); }
 
   async function save() {
-    if (!form.name || !form.price) { setError('Nom et prix requis'); return; }
+    if (!form.name || !form.price || form.quantity === '') { setError('Nom, prix et quantité requis'); return; }
+    if (Number(form.quantity) < 0) { setError('Quantité invalide'); return; }
     setLoading(true);
     setError('');
     try {
-      await onSave({ ...form, price: parseFloat(form.price) });
+      await onSave({ ...form, price: parseFloat(form.price), quantity: Number(form.quantity) });
     } catch (e) {
       setError(e.message);
       setLoading(false);
@@ -342,7 +344,7 @@ function ProductForm({ product, onClose, onSave }) {
         </div>
 
         <div className="px-8 py-6 flex flex-col gap-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Nom *</label>
               <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Chemise Lin" className="w-full px-4 py-2.5" />
@@ -350,6 +352,10 @@ function ProductForm({ product, onClose, onSave }) {
             <div>
               <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Prix (€) *</label>
               <input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="89" className="w-full px-4 py-2.5" />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Quantité *</label>
+              <input type="number" min="0" value={form.quantity} onChange={e => set('quantity', e.target.value)} placeholder="10" className="w-full px-4 py-2.5" />
             </div>
           </div>
 

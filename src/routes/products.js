@@ -43,6 +43,7 @@ function toJSON(p) {
     category: p.category?.name ?? null,
     image_url: p.imageUrl,
     in_stock: p.inStock,
+    quantity: p.quantity,
     sizes: p.sizes,
     materials: p.materials,
     created_at: p.createdAt,
@@ -105,7 +106,7 @@ router.get('/:id', async (req, res) => {
 // ── Admin (JWT required) ────────────────────────────────────────────────────
 
 router.post('/', requireAuth, async (req, res) => {
-  const { name, description, price, category, image_url, in_stock, sizes, materials } = req.body;
+  const { name, description, price, category, image_url, in_stock, quantity, sizes, materials } = req.body;
   if (!name || !price || !category) {
     return res.status(400).json({ error: 'Nom, prix et catégorie requis' });
   }
@@ -120,6 +121,7 @@ router.post('/', requireAuth, async (req, res) => {
         price,
         imageUrl: image_url || null,
         inStock: in_stock ?? true,
+        quantity: quantity ?? 0,
         sizes: sizes || [],
         materials: materials || [],
         categoryId: cat.id,
@@ -134,7 +136,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 router.put('/:id', requireAuth, async (req, res) => {
-  const { name, description, price, category, image_url, in_stock, sizes, materials } = req.body;
+  const { name, description, price, category, image_url, in_stock, quantity, sizes, materials } = req.body;
   try {
     const data = {};
     if (name !== undefined)        data.name        = name;
@@ -142,6 +144,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (price !== undefined)       data.price       = price;
     if (image_url !== undefined)   data.imageUrl    = image_url;
     if (in_stock !== undefined)    data.inStock     = in_stock;
+    if (quantity !== undefined)    data.quantity    = Number(quantity);
     if (sizes !== undefined)       data.sizes       = sizes;
     if (materials !== undefined)   data.materials   = materials;
     if (category !== undefined) {
