@@ -112,7 +112,8 @@ async function main() {
 
   // ── Admin ────────────────────────────────────────────────────────────────
 
-  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin25', 12);
+  if (!process.env.ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD env var is required');
+  const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
   await prisma.user.create({
     data: {
       email: process.env.ADMIN_EMAIL || 'admin@rue25.fr',
