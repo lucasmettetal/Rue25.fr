@@ -73,8 +73,8 @@ Copiez `.env.example` en `.env` et remplissez les valeurs.
 | `DATABASE_URL`         | ✓      | URL PostgreSQL |
 | `JWT_SECRET`           | ✓      | Clé secrète JWT (min 32 caractères) |
 | `JWT_EXPIRES_IN`       |        | Durée de validité du token (défaut : `7d`) |
-| `ADMIN_EMAIL`          |        | Email admin créé au seed (défaut : `admin@rue25.fr`) |
-| `ADMIN_PASSWORD`       |        | Mot de passe admin créé au seed (défaut : `admin25`) |
+| `ADMIN_EMAIL`          | ✓      | Email admin créé au seed — **choisir une adresse non devinable** |
+| `ADMIN_PASSWORD`       | ✓      | Mot de passe admin (**≥ 16 car. aléatoires** — le seed échoue si absent) |
 | `PORT`                 |        | Port du serveur (défaut : `3001`) |
 | `CLIENT_URL`           |        | URL du frontend pour CORS et redirections Stripe |
 | `STRIPE_SECRET_KEY`    | ✓      | Clé secrète Stripe (`sk_test_…` ou `sk_live_…`) |
