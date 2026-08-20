@@ -4,12 +4,33 @@ import { getProducts } from '../lib/api.js';
 import { useCart } from '../hooks/useCart.jsx';
 import { useCustomerAuth } from '../hooks/useCustomerAuth.jsx';
 import ProductModal from '../components/ProductModal.jsx';
+import ProductImage from '../components/ProductImage.jsx';
 import CartDrawer from '../components/CartDrawer.jsx';
 
 const IMG_HERO    = '/images/hero.jpg';
 const IMG_ATELIER = '/images/atelier.jpg';
 
 const CATEGORIES = ['Tous', 'Chemises', 'Robes', 'Vestes', 'Pantalons', 'Pulls', 'Jupes'];
+
+// Style commun des liens de navigation (en-tête desktop et menu mobile).
+const NAV_LINK = 'text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors';
+
+const FOOTER_LINK = 'block text-xs text-white/55 mb-2.5 hover:text-white transition-colors';
+
+// Chaque lien pointe vers une destination qui existe réellement : une ancre de
+// cette page (#) ou une route de l'application.
+const FOOTER_COLUMNS = [
+  ['BOUTIQUE', [
+    ['Collections', '#catalogue'],
+    ['Sur mesure', '/sur-mesure'],
+    ['Mon compte', '/mon-compte'],
+  ]],
+  ['INFOS', [
+    ['Notre atelier', '#atelier'],
+    ['Contact', '/contact'],
+    ['Mentions légales', '/mentions-legales'],
+  ]],
+];
 
 const BANNER_ITEMS = [
   '✦  Livraison offerte dès 150 €',
@@ -77,15 +98,10 @@ export default function Storefront() {
 
           {/* Nav desktop */}
           <nav className="hidden md:flex gap-8">
-            {['Boutique', 'Notre Histoire', 'Contact'].map(n => (
-              <a key={n} href="#" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">{n}</a>
-            ))}
-            <Link to="/sur-mesure" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
-              Sur Mesure
-            </Link>
-            <Link to="/contact" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
-              Contact
-            </Link>
+            <a href="#catalogue" className={NAV_LINK}>Boutique</a>
+            <a href="#atelier" className={NAV_LINK}>Notre Histoire</a>
+            <Link to="/sur-mesure" className={NAV_LINK}>Sur Mesure</Link>
+            <Link to="/contact" className={NAV_LINK}>Contact</Link>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
@@ -130,18 +146,12 @@ export default function Storefront() {
         {/* Menu mobile déroulant */}
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-stone px-6 py-5 flex flex-col gap-4">
-            {['Boutique', 'Notre Histoire', 'Contact'].map(n => (
-              <a key={n} href="#" onClick={() => setMenuOpen(false)}
-                className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
-                {n}
-              </a>
-            ))}
-            <Link to="/sur-mesure" onClick={() => setMenuOpen(false)}
-              className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
+            <a href="#catalogue" onClick={() => setMenuOpen(false)} className={NAV_LINK}>Boutique</a>
+            <a href="#atelier" onClick={() => setMenuOpen(false)} className={NAV_LINK}>Notre Histoire</a>
+            <Link to="/sur-mesure" onClick={() => setMenuOpen(false)} className={NAV_LINK}>
               Sur Mesure
             </Link>
-            <Link to="/contact" onClick={() => setMenuOpen(false)}
-              className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
+            <Link to="/contact" onClick={() => setMenuOpen(false)} className={NAV_LINK}>
               Contact
             </Link>
             <Link to="/admin" onClick={() => setMenuOpen(false)}
@@ -181,7 +191,7 @@ export default function Storefront() {
       </section>
 
       {/* Catalogue */}
-      <section id="catalogue" className="max-w-7xl mx-auto px-4 md:px-10 py-16">
+      <section id="catalogue" className="max-w-7xl mx-auto px-4 md:px-10 py-16 scroll-mt-[68px]">
         <div className="flex flex-col gap-4 mb-10">
           {/* Filtres catégories */}
           <div className="flex flex-wrap gap-2">
@@ -229,8 +239,8 @@ export default function Storefront() {
         )}
       </section>
 
-      {/* About */}
-      <section className="bg-white border-y border-stone">
+      {/* About — cible du lien « Notre Histoire » */}
+      <section id="atelier" className="bg-white border-y border-stone scroll-mt-[68px]">
         <div className="max-w-7xl mx-auto px-4 md:px-10 py-16 md:py-20 grid md:grid-cols-2 gap-10 md:gap-20 items-center">
           <div className="aspect-[4/5] overflow-hidden">
             {/* Section située loin sous la ligne de flottaison : chargement différé
@@ -270,18 +280,28 @@ export default function Storefront() {
               </div>
               <p className="text-xs text-white/45 leading-relaxed max-w-[200px]">Vêtements artisanaux façonnés avec passion et authenticité.</p>
             </div>
-            {[['BOUTIQUE', ['Collections', 'Nouveautés', 'Sur mesure']], ['INFOS', ['À propos', 'Livraison', 'Retours']]].map(([title, links]) => (
+            {FOOTER_COLUMNS.map(([title, links]) => (
               <div key={title}>
                 <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">{title}</p>
-                {links.map(l => <a key={l} href="#" className="block text-xs text-white/55 mb-2.5 hover:text-white transition-colors">{l}</a>)}
+                {links.map(([label, to]) => (
+                  to.startsWith('#')
+                    ? <a key={label} href={to} className={FOOTER_LINK}>{label}</a>
+                    : <Link key={label} to={to} className={FOOTER_LINK}>{label}</Link>
+                ))}
               </div>
             ))}
+            {/* Le champ newsletter d'origine n'était relié à rien : collecter une
+                adresse sans traitement derrière est trompeur (et non conforme au
+                RGPD). On oriente vers le formulaire de contact, qui fonctionne. */}
             <div className="col-span-2 md:col-span-1">
-              <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">NEWSLETTER</p>
-              <div className="flex">
-                <input placeholder="votre@email.fr" className="flex-1 bg-white/10 border border-white/15 text-white text-xs border-r-0" />
-                <button className="bg-accent px-4 text-white text-base flex-shrink-0">→</button>
-              </div>
+              <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">NOUS ÉCRIRE</p>
+              <p className="text-xs text-white/45 leading-relaxed mb-4">
+                Une question sur une pièce ou un projet sur mesure ? Nous répondons sous 48 h.
+              </p>
+              <Link to="/contact"
+                className="inline-block text-[11px] tracking-widest uppercase border border-white/20 text-white/70 px-5 py-2.5 hover:border-white/50 hover:text-white transition-colors">
+                Nous contacter →
+              </Link>
             </div>
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/30">
@@ -308,8 +328,8 @@ function ProductCard({ product, index, onSelect }) {
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       onClick={() => onSelect(product)}>
       <div className="relative aspect-[3/4] overflow-hidden bg-stone mb-3 md:mb-4">
-        <img src={product.image_url} alt={product.name} loading="lazy" decoding="async"
-          className={`w-full h-full object-cover transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`} />
+        <ProductImage src={product.image_url} alt={product.name}
+          className={`w-full h-full transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`} />
         {!product.in_stock && (
           <div className="absolute inset-0 bg-cream/75 backdrop-blur-sm flex items-center justify-center">
             <span className="text-[10px] tracking-[0.25em] uppercase border border-stone px-5 py-2 text-muted">Épuisé</span>
