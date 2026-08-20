@@ -137,7 +137,10 @@ export default function ContactPage() {
       <footer className="bg-dark text-white px-4 md:px-10 py-8 border-t border-white/10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-3 text-[11px] text-white/30">
           <span>© 2026 Rue 25. Tous droits réservés.</span>
-          <Link to="/sur-mesure" className="hover:text-white/60 transition-colors">Service sur-mesure</Link>
+          <div className="flex flex-wrap gap-x-5 gap-y-1">
+            <Link to="/mentions-legales" className="hover:text-white/60 transition-colors">Mentions légales</Link>
+            <Link to="/politique-de-confidentialite" className="hover:text-white/60 transition-colors">Politique de confidentialité</Link>
+          </div>
         </div>
       </footer>
     </div>

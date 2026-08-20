@@ -276,9 +276,13 @@ export default function Storefront() {
               </div>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between gap-2 text-[11px] text-white/30">
+          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/30">
             <span>© 2026 Rue 25. Tous droits réservés.</span>
-            <span>25 rue des Artisans, Montauban</span>
+            <div className="flex flex-wrap gap-x-5 gap-y-1">
+              <Link to="/mentions-legales" className="hover:text-white/60 transition-colors">Mentions légales</Link>
+              <Link to="/politique-de-confidentialite" className="hover:text-white/60 transition-colors">Politique de confidentialité</Link>
+              <Link to="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+            </div>
           </div>
         </div>
       </footer>
