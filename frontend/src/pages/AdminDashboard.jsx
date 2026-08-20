@@ -286,7 +286,7 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
   return (
     <div className="bg-white border border-stone">
       <div className="relative aspect-[3/4] overflow-hidden">
-        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+        <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         <span className={`absolute top-2.5 right-2.5 text-[10px] px-2.5 py-0.5 uppercase tracking-widest ${product.in_stock ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
           {product.in_stock ? 'En stock' : 'Épuisé'}
         </span>

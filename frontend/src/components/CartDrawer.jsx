@@ -93,7 +93,7 @@ export default function CartDrawer({ onClose }) {
               ) : cart.map(item => (
                 <div key={item.key} className="flex gap-4 mb-6 pb-6 border-b border-stone last:border-0 last:mb-0 last:pb-0">
                   {item.image_url
-                    ? <img src={item.image_url} alt={item.name} className="w-[70px] h-[90px] object-cover flex-shrink-0" />
+                    ? <img src={item.image_url} alt={item.name} loading="lazy" decoding="async" className="w-[70px] h-[90px] object-cover flex-shrink-0" />
                     : <div className="w-[70px] h-[90px] bg-stone flex-shrink-0" />
                   }
                   <div className="flex-1 min-w-0">

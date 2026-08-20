@@ -154,10 +154,15 @@ export default function Storefront() {
 
       {/* Hero */}
       <section className="relative h-[78vh] overflow-hidden flex items-end">
+        {/* Image du hero : c'est le plus gros élément affiché d'entrée (LCP).
+            On la charge en priorité — surtout pas en lazy. */}
         <img
           src={IMG_HERO}
-          alt="Atelier couture fait main"
+          alt="Détail d'une pièce brodée à la main dans l'atelier Rue 25"
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[rgba(26,24,21,0.82)] via-[rgba(26,24,21,0.18)] to-transparent" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-10 pb-10 md:pb-16 w-full fade-up">
@@ -228,7 +233,10 @@ export default function Storefront() {
       <section className="bg-white border-y border-stone">
         <div className="max-w-7xl mx-auto px-4 md:px-10 py-16 md:py-20 grid md:grid-cols-2 gap-10 md:gap-20 items-center">
           <div className="aspect-[4/5] overflow-hidden">
-            <img src={IMG_ATELIER} alt="Atelier couture" className="w-full h-full object-cover" />
+            {/* Section située loin sous la ligne de flottaison : chargement différé
+                pour ne pas peser sur l'affichage initial (~487 Ko économisés). */}
+            <img src={IMG_ATELIER} alt="Vue de l'atelier de couture Rue 25"
+              className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
           <div>
             <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Notre atelier</p>
@@ -300,7 +308,7 @@ function ProductCard({ product, index, onSelect }) {
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       onClick={() => onSelect(product)}>
       <div className="relative aspect-[3/4] overflow-hidden bg-stone mb-3 md:mb-4">
-        <img src={product.image_url} alt={product.name}
+        <img src={product.image_url} alt={product.name} loading="lazy" decoding="async"
           className={`w-full h-full object-cover transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`} />
         {!product.in_stock && (
           <div className="absolute inset-0 bg-cream/75 backdrop-blur-sm flex items-center justify-center">
