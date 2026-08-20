@@ -2,7 +2,7 @@ import { Router } from 'express';
 import Stripe from 'stripe';
 import prisma from '../lib/prisma.js';
 import { optionalAuth } from '../middleware/auth.js';
-import { generateRef, orderToJSON } from '../lib/utils.js';
+import { generateRef, orderToJSON, isValidEmail, stripHeaderChars } from '../lib/utils.js';
 import { sendOrderConfirmation } from '../lib/mailer.js';
 
 const router = Router();
@@ -12,8 +12,13 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY);
 }
 
-function stripeRefFromSession(sessionId) {
-  return `R25-S${sessionId.slice(-6).toUpperCase()}`;
+const MAX_REF_ATTEMPTS = 5;
+
+function findOrderBySession(sessionId) {
+  return prisma.order.findUnique({
+    where: { stripeSessionId: sessionId },
+    include: { items: true },
+  });
 }
 
 async function buildOrderItems(items) {
@@ -21,21 +26,113 @@ async function buildOrderItems(items) {
   const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
   const byId = Object.fromEntries(products.map(p => [p.id, p]));
 
+  const orderCounts = new Map();
   let total = 0;
   const orderItems = [];
+
   for (const item of items) {
-    const product = byId[Number(item.product_id)];
-    if (!product) continue;
-    total += Number(product.price) * item.quantity;
+    const productId = Number(item.product_id);
+    orderCounts.set(productId, (orderCounts.get(productId) || 0) + item.quantity);
+    const product = byId[productId];
+    if (!product) throw new Error(`Produit ${item.product_id} introuvable`);
     orderItems.push({
-      productId: product.id,
+      productId,
       name: product.name,
       price: product.price,
       size: item.size || null,
       quantity: item.quantity,
     });
+    total += Number(product.price) * item.quantity;
   }
+
+  for (const [productId, orderedQty] of orderCounts.entries()) {
+    const product = byId[productId];
+    if (!product) throw new Error(`Produit ${productId} introuvable`);
+    if (!product.inStock || product.quantity < orderedQty) {
+      throw new Error(`${product.name} n'est pas disponible en quantité suffisante`);
+    }
+  }
+
   return { total, orderItems };
+}
+
+// Crée la commande correspondant à une session Stripe payée, ou retourne celle
+// qui existe déjà. L'unicité de stripe_session_id en base est ce qui garantit
+// qu'un webhook et un appel /verify simultanés ne créent jamais deux commandes
+// pour le même paiement : le perdant reçoit une violation d'unicité (P2002) et
+// récupère la commande gagnante.
+// Retourne { order, created } — created indique s'il faut envoyer l'email.
+async function findOrCreateOrderForSession(session) {
+  const existing = await findOrderBySession(session.id);
+  if (existing) return { order: existing, created: false };
+
+  const { customer_name, email, items: itemsJson, user_id } = session.metadata;
+  const items = JSON.parse(itemsJson);
+
+  let total, orderItems;
+  try {
+    ({ total, orderItems } = await buildOrderItems(items));
+  } catch (err) {
+    // Le stock a pu être décrémenté entre-temps par l'autre chemin de création
+    const winner = await findOrderBySession(session.id);
+    if (winner) return { order: winner, created: false };
+    throw err;
+  }
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: items.map(i => Number(i.product_id)) } },
+  });
+
+  for (let attempt = 0; attempt < MAX_REF_ATTEMPTS; attempt++) {
+    try {
+      const order = await prisma.$transaction(async (tx) => {
+        const newOrder = await tx.order.create({
+          data: {
+            reference: generateRef(),
+            stripeSessionId: session.id,
+            customerName: customer_name,
+            customerEmail: email,
+            total,
+            status: 'nouveau',
+            userId: user_id ? Number(user_id) : null,
+            items: { create: orderItems },
+          },
+          include: { items: true },
+        });
+
+        for (const product of products) {
+          const orderedQty = items
+            .filter(i => Number(i.product_id) === product.id)
+            .reduce((sum, i) => sum + i.quantity, 0);
+          const remaining = product.quantity - orderedQty;
+          const updated = await tx.product.updateMany({
+            where: { id: product.id, quantity: { gte: orderedQty } },
+            data: { quantity: remaining, inStock: remaining > 0 },
+          });
+          if (updated.count === 0) {
+            throw new Error(`Impossible de mettre à jour le stock pour ${product.name}`);
+          }
+        }
+
+        return newOrder;
+      });
+
+      return { order, created: true };
+    } catch (err) {
+      if (err.code !== 'P2002') throw err;
+
+      const target = String(err.meta?.target ?? '');
+      if (target.includes('session')) {
+        // L'autre chemin (webhook ou /verify) a gagné la course
+        const winner = await findOrderBySession(session.id);
+        if (winner) return { order: winner, created: false };
+        throw err;
+      }
+      // Collision improbable sur la référence aléatoire : on retente
+    }
+  }
+
+  throw new Error('Impossible de générer une référence de commande unique');
 }
 
 // POST /api/stripe/checkout — crée une session Stripe Checkout
@@ -49,17 +146,25 @@ router.post('/checkout', optionalAuth, async (req, res) => {
   if (!items?.length || !customer_name || !email) {
     return res.status(400).json({ error: 'Données manquantes' });
   }
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'Email invalide' });
+  const safeCustomerName = stripHeaderChars(customer_name);
 
   try {
     const productIds = items.map(i => Number(i.product_id));
     const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
     const byId = Object.fromEntries(products.map(p => [p.id, p]));
 
+    const orderCounts = new Map();
     const lineItems = [];
     for (const item of items) {
-      const product = byId[Number(item.product_id)];
+      const productId = Number(item.product_id);
+      const product = byId[productId];
       if (!product) throw new Error(`Produit ${item.product_id} introuvable`);
-      if (!product.inStock) throw new Error(`${product.name} est épuisé`);
+      const nextCount = (orderCounts.get(productId) || 0) + item.quantity;
+      orderCounts.set(productId, nextCount);
+      if (!product.inStock || product.quantity < nextCount) {
+        throw new Error(`${product.name} n'est pas disponible en quantité suffisante`);
+      }
       lineItems.push({
         price_data: {
           currency: 'eur',
@@ -79,7 +184,7 @@ router.post('/checkout', optionalAuth, async (req, res) => {
       mode: 'payment',
       customer_email: email,
       metadata: {
-        customer_name,
+        customer_name: safeCustomerName,
         email,
         shipping: shipping || '',
         items: JSON.stringify(items),
@@ -97,7 +202,7 @@ router.post('/checkout', optionalAuth, async (req, res) => {
 });
 
 // GET /api/stripe/verify/:sessionId — confirmation côté client (fallback si webhook en retard)
-router.get('/verify/:sessionId', async (req, res) => {
+router.get('/verify/:sessionId', optionalAuth, async (req, res) => {
   const stripe = getStripe();
   if (!stripe) return res.status(503).json({ error: 'Stripe non configuré' });
 
@@ -107,40 +212,25 @@ router.get('/verify/:sessionId', async (req, res) => {
       return res.status(400).json({ error: 'Paiement non confirmé' });
     }
 
-    const stripeRef = stripeRefFromSession(req.params.sessionId);
+    // Une commande liée à un compte ne peut être consultée que par son propriétaire ou un admin
+    const sessionUserId = session.metadata?.user_id ? Number(session.metadata.user_id) : null;
+    if (sessionUserId && req.authUser?.id !== sessionUserId && req.authUser?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
 
-    // Commande déjà créée par le webhook — on la retourne simplement
-    const existing = await prisma.order.findFirst({
-      where: { reference: stripeRef },
-      include: { items: true },
-    });
-    if (existing) return res.json({ order: orderToJSON(existing), reference: existing.reference });
+    // Soit la commande a déjà été créée par le webhook, soit on la crée ici
+    // (fallback si le webhook n'a pas encore tiré)
+    const { order, created } = await findOrCreateOrderForSession(session);
 
-    // Fallback : le webhook n'a pas encore tiré, on crée la commande ici
-    const { customer_name, email, items: itemsJson, user_id } = session.metadata;
-    const items = JSON.parse(itemsJson);
-    const { total, orderItems } = await buildOrderItems(items);
-
-    const order = await prisma.order.create({
-      data: {
-        reference: stripeRef,
-        customerName: customer_name,
-        customerEmail: email,
-        total,
-        status: 'nouveau',
-        userId: user_id ? Number(user_id) : null,
-        items: { create: orderItems },
-      },
-      include: { items: true },
-    });
-
-    sendOrderConfirmation({
-      to: email,
-      name: customer_name,
-      reference: order.reference,
-      items: order.items,
-      total: order.total,
-    });
+    if (created) {
+      sendOrderConfirmation({
+        to: order.customerEmail,
+        name: order.customerName,
+        reference: order.reference,
+        items: order.items,
+        total: order.total,
+      });
+    }
 
     res.json({ order: orderToJSON(order), reference: order.reference });
   } catch (err) {
@@ -171,30 +261,12 @@ export async function stripeWebhook(req, res) {
     const session = event.data.object;
     if (session.payment_status !== 'paid') return res.json({ received: true });
 
-    const stripeRef = stripeRefFromSession(session.id);
-    const exists = await prisma.order.findFirst({ where: { reference: stripeRef } });
-    if (exists) return res.json({ received: true });
-
-    const { customer_name, email, items: itemsJson, user_id } = session.metadata;
-    const items = JSON.parse(itemsJson);
-    const { total, orderItems } = await buildOrderItems(items);
-
-    const order = await prisma.order.create({
-      data: {
-        reference: stripeRef,
-        customerName: customer_name,
-        customerEmail: email,
-        total,
-        status: 'nouveau',
-        userId: user_id ? Number(user_id) : null,
-        items: { create: orderItems },
-      },
-      include: { items: true },
-    });
+    const { order, created } = await findOrCreateOrderForSession(session);
+    if (!created) return res.json({ received: true });
 
     sendOrderConfirmation({
-      to: email,
-      name: customer_name,
+      to: order.customerEmail,
+      name: order.customerName,
       reference: order.reference,
       items: order.items,
       total: order.total,

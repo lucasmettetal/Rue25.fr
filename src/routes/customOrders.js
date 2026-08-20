@@ -1,12 +1,21 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import prisma from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
-import { generateRef } from '../lib/utils.js';
+import { generateRef, isValidEmail, stripHeaderChars } from '../lib/utils.js';
 import { sendCustomOrderConfirmation } from '../lib/mailer.js';
 
 const router = Router();
 
 const VALID_STATUSES = ['nouveau', 'en étude', 'devis envoyé', 'accepté', 'en création', 'terminé', 'annulé'];
+
+const customOrderLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de demandes envoyées, réessayez dans une heure' },
+});
 
 function toJSON(c) {
   return {
@@ -34,16 +43,18 @@ function toJSON(c) {
 
 // ── Public — soumettre une demande ───────────────────────────────────────────
 
-router.post('/', async (req, res) => {
+router.post('/', customOrderLimiter, async (req, res) => {
   const { name, email, phone, garment_type, description, chest, waist, hips, height, inseam, materials, budget, timeline, notes } = req.body;
   if (!name || !email || !garment_type || !description) {
     return res.status(400).json({ error: 'Nom, email, type de vêtement et description sont requis' });
   }
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'Email invalide' });
+  const safeName = stripHeaderChars(name);
   try {
     const order = await prisma.customOrder.create({
       data: {
         reference: generateRef('SM'),
-        name,
+        name: safeName,
         email,
         phone: phone || null,
         garmentType: garment_type,
@@ -62,7 +73,7 @@ router.post('/', async (req, res) => {
 
     sendCustomOrderConfirmation({
       to: email,
-      name,
+      name: safeName,
       reference: order.reference,
       garmentType: garment_type,
     });
@@ -83,6 +94,7 @@ router.get('/', requireAuth, async (req, res) => {
     });
     res.json(orders.map(toJSON));
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -93,6 +105,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     if (!order) return res.status(404).json({ error: 'Demande introuvable' });
     res.json(toJSON(order));
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

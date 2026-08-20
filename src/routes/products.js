@@ -61,6 +61,7 @@ router.get('/categories', async (req, res) => {
     });
     res.json(categories);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -99,6 +100,7 @@ router.get('/:id', async (req, res) => {
     if (!product) return res.status(404).json({ error: 'Produit introuvable' });
     res.json(toJSON(product));
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -106,13 +108,17 @@ router.get('/:id', async (req, res) => {
 // ── Admin (JWT required) ────────────────────────────────────────────────────
 
 router.post('/', requireAuth, async (req, res) => {
-  const { name, description, price, category, image_url, in_stock, quantity, sizes, materials } = req.body;
-  if (!name || !price || !category) {
-    return res.status(400).json({ error: 'Nom, prix et catégorie requis' });
+  const { name, description, price, category, image_url, quantity, sizes, materials } = req.body;
+  if (!name || !price || !category || quantity === undefined) {
+    return res.status(400).json({ error: 'Nom, prix, catégorie et quantité requis' });
+  }
+  if (Number(quantity) < 0) {
+    return res.status(400).json({ error: 'Quantité invalide' });
   }
   try {
     const cat = await resolveCategory(category);
     const slug = await uniqueSlug(slugify(name));
+    const qty = Number(quantity);
     const product = await prisma.product.create({
       data: {
         name,
@@ -120,8 +126,8 @@ router.post('/', requireAuth, async (req, res) => {
         description: description || null,
         price,
         imageUrl: image_url || null,
-        inStock: in_stock ?? true,
-        quantity: quantity ?? 0,
+        quantity: qty,
+        inStock: qty > 0,
         sizes: sizes || [],
         materials: materials || [],
         categoryId: cat.id,
@@ -136,15 +142,18 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 router.put('/:id', requireAuth, async (req, res) => {
-  const { name, description, price, category, image_url, in_stock, quantity, sizes, materials } = req.body;
+  const { name, description, price, category, image_url, quantity, sizes, materials } = req.body;
   try {
     const data = {};
     if (name !== undefined)        data.name        = name;
     if (description !== undefined) data.description = description;
     if (price !== undefined)       data.price       = price;
     if (image_url !== undefined)   data.imageUrl    = image_url;
-    if (in_stock !== undefined)    data.inStock     = in_stock;
-    if (quantity !== undefined)    data.quantity    = Number(quantity);
+    if (quantity !== undefined) {
+      if (Number(quantity) < 0) return res.status(400).json({ error: 'Quantité invalide' });
+      data.quantity = Number(quantity);
+      data.inStock = Number(quantity) > 0;
+    }
     if (sizes !== undefined)       data.sizes       = sizes;
     if (materials !== undefined)   data.materials   = materials;
     if (category !== undefined) {
@@ -170,6 +179,10 @@ router.delete('/:id', requireAuth, async (req, res) => {
     res.json({ message: 'Produit supprimé' });
   } catch (err) {
     if (err.code === 'P2025') return res.status(404).json({ error: 'Produit introuvable' });
+    // onDelete: Restrict sur order_items — on préserve l'historique des commandes
+    if (err.code === 'P2003') {
+      return res.status(409).json({ error: 'Ce produit est lié à des commandes existantes et ne peut pas être supprimé' });
+    }
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

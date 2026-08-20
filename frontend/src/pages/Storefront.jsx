@@ -83,6 +83,9 @@ export default function Storefront() {
             <Link to="/sur-mesure" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
               Sur Mesure
             </Link>
+            <Link to="/contact" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
+              Contact
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
@@ -136,6 +139,10 @@ export default function Storefront() {
             <Link to="/sur-mesure" onClick={() => setMenuOpen(false)}
               className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
               Sur Mesure
+            </Link>
+            <Link to="/contact" onClick={() => setMenuOpen(false)}
+              className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
+              Contact
             </Link>
             <Link to="/admin" onClick={() => setMenuOpen(false)}
               className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">

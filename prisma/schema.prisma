@@ -73,6 +73,9 @@ model Order {
   customerEmail String   @map("customer_email")
   userId        Int?     @map("user_id")
   addressId     Int?     @map("address_id")
+  // Identifiant complet de la session Stripe : clé d'idempotence du paiement.
+  // NULL pour les commandes hors Stripe (plusieurs NULL autorisés par l'index unique Postgres).
+  stripeSessionId String? @unique @map("stripe_session_id")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

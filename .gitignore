@@ -26,3 +26,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Uploads (images produits — volume persistant, hors dépôt)
+uploads/
