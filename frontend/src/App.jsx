@@ -11,6 +11,10 @@ import RegisterPage    from './pages/RegisterPage.jsx';
 import AccountPage     from './pages/AccountPage.jsx';
 import OrderSuccess    from './pages/OrderSuccess.jsx';
 import SurMesurePage  from './pages/SurMesurePage.jsx';
+import ContactPage    from './pages/ContactPage.jsx';
+import LegalPage      from './pages/LegalPage.jsx';
+import PrivacyPage    from './pages/PrivacyPage.jsx';
+import CookieBanner   from './components/CookieBanner.jsx';
 
 import './index.css';
 
@@ -27,10 +31,14 @@ export default function App() {
               <Route path="/mon-compte"            element={<AccountPage />} />
               <Route path="/commande/succes"       element={<OrderSuccess />} />
               <Route path="/sur-mesure"            element={<SurMesurePage />} />
+              <Route path="/contact"               element={<ContactPage />} />
+              <Route path="/mentions-legales"      element={<LegalPage />} />
+              <Route path="/politique-de-confidentialite" element={<PrivacyPage />} />
               <Route path="/admin"                 element={<AdminLogin />} />
               <Route path="/admin/dashboard"       element={<AdminDashboard />} />
               <Route path="*"                      element={<Navigate to="/" />} />
             </Routes>
+            <CookieBanner />
           </BrowserRouter>
         </CartProvider>
       </CustomerAuthProvider>

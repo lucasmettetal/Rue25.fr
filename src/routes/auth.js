@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import prisma from '../lib/prisma.js';
 import { requireCustomer } from '../middleware/auth.js';
+import { isValidEmail } from '../lib/utils.js';
 
 const router = Router();
 
@@ -43,6 +44,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 router.post('/register', loginLimiter, async (req, res) => {
   const { email, password, firstName, lastName } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'Email invalide' });
   if (password.length < 8) return res.status(400).json({ error: 'Mot de passe trop court (8 caractères minimum)' });
   try {
     const exists = await prisma.user.findUnique({ where: { email } });
@@ -57,6 +59,9 @@ router.post('/register', loginLimiter, async (req, res) => {
       user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName },
     });
   } catch (err) {
+    // Deux inscriptions simultanées avec le même email passent toutes les deux
+    // le findUnique ci-dessus ; c'est la contrainte d'unicité en base qui tranche
+    if (err.code === 'P2002') return res.status(409).json({ error: 'Cet email est déjà utilisé' });
     console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
@@ -93,6 +98,7 @@ router.get('/me', requireCustomer, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
     res.json(user);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -117,6 +123,7 @@ router.get('/my-orders', requireCustomer, async (req, res) => {
       })),
     })));
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

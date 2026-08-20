@@ -1,5 +1,19 @@
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
+// Origine de l'API (BASE sans le suffixe /api). En production, front (Cloudflare)
+// et API (Railway) sont sur des domaines différents : les images uploadées, servies
+// par l'API sous /uploads, doivent être résolues vers cette origine, pas vers le front.
+const API_ORIGIN = BASE.replace(/\/api\/?$/, '');
+
+// Transforme une URL d'image en URL affichable :
+//  - URL absolue (http/https, ex. Unsplash) → inchangée
+//  - chemin relatif /uploads/… → préfixé par l'origine de l'API
+export function assetUrl(url) {
+  if (!url) return url;
+  if (/^https?:\/\//.test(url)) return url;
+  return `${API_ORIGIN}${url}`;
+}
+
 function getAdminToken() {
   return localStorage.getItem('rue25_token');
 }
@@ -84,6 +98,27 @@ export const getCustomOrders = () =>
   request('/custom-orders');
 export const updateCustomOrderStatus = (id, status) =>
   request(`/custom-orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+
+// ── Upload image (admin) ─────────────────────────────────────────────────────
+// multipart/form-data : on n'impose pas de Content-Type, le navigateur ajoute
+// la boundary lui-même. Renvoie une URL absolue directement affichable.
+export async function uploadImage(file) {
+  const token = getAdminToken();
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`${BASE}/upload`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erreur upload');
+  return assetUrl(data.url);
+}
+
+// ── Contact ──────────────────────────────────────────────────────────────────
+export const sendContact = (data) =>
+  request('/contact', { method: 'POST', body: JSON.stringify(data) });
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 export const createCheckout = (data) =>

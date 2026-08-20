@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import * as api from '../lib/api.js';
@@ -317,10 +317,27 @@ function ProductForm({ product, onClose, onSave }) {
   const [sizeInput, setSizeInput] = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef(null);
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
   function addTag(field, val, clear) { if (val.trim()) { set(field, [...(form[field] || []), val.trim()]); clear(''); } }
   function removeTag(field, i) { set(field, form[field].filter((_, idx) => idx !== i)); }
+
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError('');
+    try {
+      const url = await api.uploadImage(file);
+      set('image_url', url);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function save() {
     if (!form.name || !form.price || form.quantity === '') { setError('Nom, prix et quantité requis'); return; }
@@ -373,9 +390,16 @@ function ProductForm({ product, onClose, onSave }) {
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">URL de l'image</label>
-            <input value={form.image_url} onChange={e => set('image_url', e.target.value)}
-              placeholder="https://images.unsplash.com/…" className="w-full px-4 py-2.5" />
+            <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Image</label>
+            <div className="flex gap-2">
+              <input value={form.image_url} onChange={e => set('image_url', e.target.value)}
+                placeholder="https://images.unsplash.com/… ou envoyer un fichier" className="flex-1 px-4 py-2.5" />
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                className="border border-stone text-xs px-4 text-muted hover:border-dark whitespace-nowrap disabled:opacity-50">
+                {uploading ? 'Envoi…' : 'Choisir un fichier'}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            </div>
             {form.image_url && (
               <img src={form.image_url} alt="aperçu" className="mt-2 h-24 object-cover border border-stone"
                 onError={e => e.target.style.display = 'none'} />
