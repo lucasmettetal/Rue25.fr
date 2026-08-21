@@ -161,6 +161,9 @@ Stage 4 - MVP/
 │   ├── schema.prisma          # Modèles (User, Product, Order, CustomOrder, Address)
 │   ├── migrations/
 │   └── seed.js                # Données initiales (catégories, produits, admin)
+├── scripts/
+│   ├── rotate-admin.js         # Rotation de l'identifiant admin (via variables d'env)
+│   └── purge-test-data.js      # Nettoyage des données de test avant ouverture
 ├── src/
 │   ├── index.js               # Point d'entrée Express
 │   ├── lib/
@@ -208,6 +211,45 @@ Stage 4 - MVP/
             ├── CookieBanner.jsx
             └── CartDrawer.jsx
 ```
+
+---
+
+## Tailles et composition des produits
+
+Le formulaire d'administration ne demande plus de saisir « S, M, L » ni
+« Lin 100% » à la main :
+
+- **Tailles** — on coche dans un barème (lettres, numérique FR, taille unique),
+  avec un champ libre pour les cas particuliers. L'ordre enregistré est
+  toujours celui du barème, quel que soit l'ordre des clics.
+- **Composition** — une ligne par fibre : pourcentage + dénomination, avec un
+  total affiché en direct. Le règlement (UE) n° 1007/2011 impose le pourcentage
+  en masse de chaque fibre **par ordre décroissant** ; le tri est donc fait
+  automatiquement et un total ≠ 100 % déclenche un avertissement.
+- **Détails & finitions** — boutons, doublure, fermeture : ce qui n'est pas une
+  fibre est saisi à part et ne compte pas dans les 100 %.
+
+En base, `materials` reste un tableau de chaînes (aucune migration) : la
+conversion dans les deux sens est centralisée dans `frontend/src/lib/materials.js`,
+qui relit aussi l'ancien format (« Lin 100% »).
+
+---
+
+## Nettoyage des données de test
+
+Avant l'ouverture au public, `scripts/purge-test-data.js` vide les commandes
+laissées par les essais. **Il n'affiche qu'un aperçu tant qu'on ne passe pas
+`--confirm`** ; la suppression est ensuite définitive.
+
+```bash
+node scripts/purge-test-data.js                      # aperçu, ne supprime rien
+node scripts/purge-test-data.js --confirm            # commandes uniquement
+node scripts/purge-test-data.js --confirm --sur-mesure --clients --produits
+```
+
+Les comptes **admin ne sont jamais supprimés**. Les produits ne peuvent l'être
+qu'après les commandes qui les référencent (`order_items.product_id` est en
+`onDelete: Restrict`) : le script s'en charge dans le bon ordre.
 
 ---
 

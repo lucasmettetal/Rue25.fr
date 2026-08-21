@@ -5,6 +5,7 @@ import { useCart } from '../hooks/useCart.jsx';
 import ProductImage from '../components/ProductImage.jsx';
 import CartDrawer from '../components/CartDrawer.jsx';
 import Seo, { SITE_URL, SITE_NAME } from '../components/Seo.jsx';
+import { parseMaterials, formatFibre } from '../lib/materials.js';
 
 /**
  * Fiche produit à son adresse propre : /produit/:slug
@@ -25,6 +26,9 @@ export default function ProductPage() {
 
   // Recalculer à chaque rendu relancerait inutilement l'écriture des balises.
   const seo = useMemo(() => (product ? seoProps(product) : null), [product]);
+
+  // Composition chiffrée d'un côté, finitions non textiles de l'autre.
+  const matiere = useMemo(() => parseMaterials(product?.materials), [product]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,12 +120,23 @@ export default function ProductPage() {
                   <p className="text-sm text-muted leading-relaxed mb-8">{product.description}</p>
                 )}
 
-                {product.materials?.length > 0 && (
-                  <div className="mb-8">
-                    <p className="text-[11px] tracking-[0.1em] uppercase text-muted mb-3">Matières</p>
+                {matiere.composition.length > 0 && (
+                  <div className="mb-6">
+                    <p className="text-[11px] tracking-[0.1em] uppercase text-muted mb-3">Composition</p>
                     <div className="flex flex-wrap gap-2">
-                      {product.materials.map(m => (
-                        <span key={m} className="text-xs border border-stone px-3 py-1 text-muted">{m}</span>
+                      {matiere.composition.map(f => (
+                        <span key={f.fibre} className="text-xs border border-stone px-3 py-1 text-muted">{formatFibre(f)}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {matiere.details.length > 0 && (
+                  <div className="mb-8">
+                    <p className="text-[11px] tracking-[0.1em] uppercase text-muted mb-3">Détails</p>
+                    <div className="flex flex-wrap gap-2">
+                      {matiere.details.map(d => (
+                        <span key={d} className="text-xs border border-stone px-3 py-1 text-muted">{d}</span>
                       ))}
                     </div>
                   </div>
@@ -185,6 +200,7 @@ export default function ProductPage() {
 // Google d'afficher le prix et la disponibilité sous le résultat de recherche.
 function seoProps(p) {
   const image = p.image_url ? assetUrl(p.image_url) : undefined;
+  const { composition } = parseMaterials(p.materials);
   const description = (p.description || `${p.name} — pièce artisanale confectionnée à la main par Rue 25.`)
     .slice(0, 155);
 
@@ -201,7 +217,7 @@ function seoProps(p) {
       description,
       image: image ? [image] : undefined,
       category: p.category || undefined,
-      material: p.materials?.length ? p.materials.join(', ') : undefined,
+      material: composition.length ? composition.map(formatFibre).join(', ') : undefined,
       brand: { '@type': 'Brand', name: SITE_NAME },
       offers: {
         '@type': 'Offer',
