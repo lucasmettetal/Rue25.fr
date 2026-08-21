@@ -82,6 +82,12 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    # Le contexte `secrets` n'est pas lisible depuis le `if` d'une étape ; il
+    # l'est en revanche ici. On recopie donc les deux valeurs pour pouvoir
+    # tester leur présence plus bas.
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - uses: actions/checkout@v4
@@ -105,7 +111,7 @@ jobs:
       # déploiement au lieu de faire échouer la CI : le reste du pipeline garde
       # son sens, et le message ci-dessous dit quoi faire.
       - name: Deploy
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        if: ${{ env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -114,7 +120,7 @@ jobs:
           command: deploy
 
       - name: Secrets Cloudflare manquants
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' || secrets.CLOUDFLARE_ACCOUNT_ID == '' }}
+        if: ${{ env.CF_API_TOKEN == '' || env.CF_ACCOUNT_ID == '' }}
         run: |
           echo "::warning title=Déploiement sauté::CLOUDFLARE_API_TOKEN et/ou CLOUDFLARE_ACCOUNT_ID ne sont pas définis."
           echo "À créer dans Settings > Secrets and variables > Actions. Voir la section Déploiement du README."
