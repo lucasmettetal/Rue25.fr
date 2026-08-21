@@ -77,7 +77,7 @@ export default function CartDrawer({ onClose }) {
             <div className="text-4xl mb-4 text-green-600">✓</div>
             <p className="font-serif text-2xl mb-2">Merci !</p>
             <p className="text-sm text-muted mb-1">Commande enregistrée.</p>
-            <p className="text-xs text-accent font-medium tracking-widest mb-8">{orderRef}</p>
+            <p className="text-xs text-accent-ink font-medium tracking-widest mb-8">{orderRef}</p>
             <button onClick={onClose} className="bg-dark text-white text-xs tracking-widest uppercase px-8 py-3">Fermer</button>
           </div>
         )}
@@ -102,9 +102,9 @@ export default function CartDrawer({ onClose }) {
                     {item.size && <p className="text-xs text-muted mb-1">Taille : {item.size}</p>}
                     <p className="text-xs text-muted mb-3">{Number(item.price).toFixed(2)} €</p>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => change(item.key, -1)} className="border border-stone w-7 h-7 flex items-center justify-center hover:border-dark">−</button>
+                      <button onClick={() => change(item.key, -1)} className="border border-line w-7 h-7 flex items-center justify-center hover:border-dark">−</button>
                       <span className="text-sm w-5 text-center">{item.qty}</span>
-                      <button onClick={() => change(item.key,  1)} className="border border-stone w-7 h-7 flex items-center justify-center hover:border-dark">+</button>
+                      <button onClick={() => change(item.key,  1)} className="border border-line w-7 h-7 flex items-center justify-center hover:border-dark">+</button>
                       <button onClick={() => remove(item.key)} className="ml-auto text-[11px] text-muted uppercase tracking-widest hover:text-dark">Retirer</button>
                     </div>
                   </div>
@@ -172,7 +172,7 @@ export default function CartDrawer({ onClose }) {
                 {loading ? '…' : '💳 Payer par carte'}
               </button>
               <button onClick={handleDirectOrder} disabled={loading || !formValid}
-                className="w-full border border-stone text-muted text-xs tracking-widest uppercase py-3 hover:border-dark disabled:opacity-40">
+                className="w-full border border-line text-muted text-xs tracking-widest uppercase py-3 hover:border-dark disabled:opacity-40">
                 {loading ? '…' : 'Commander sans paiement'}
               </button>
               <button onClick={() => setStep('cart')} className="text-xs text-muted text-center pt-1 hover:text-dark">

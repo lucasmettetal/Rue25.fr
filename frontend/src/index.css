@@ -5,18 +5,10 @@
 
 @layer base {
   body { @apply bg-cream text-dark font-sans; }
-  input, textarea, select { @apply bg-cream border border-stone text-dark text-sm outline-none transition-colors focus:border-accent; }
+  /* Contour visible : à 1.2:1, l'ancien `stone` rendait les champs indiscernables
+     du fond. Le focus prend l'accent lisible, pas le doré clair. */
+  input, textarea, select { @apply bg-cream border border-line text-dark text-sm outline-none transition-colors focus:border-accent-ink; }
 }
-
-@layer utilities {
-  .tracking-widest-xl { letter-spacing: 0.25em; }
-}
-
-@keyframes bannerScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.banner-scroll { animation: bannerScroll 28s linear infinite; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }

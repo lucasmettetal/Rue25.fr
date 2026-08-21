@@ -17,14 +17,14 @@ export default function PrivacyPage() {
             <span className="font-serif text-[26px] font-normal tracking-[0.08em]">Rue</span>
             <span className="font-serif text-[30px] italic text-accent">25</span>
           </Link>
-          <Link to="/" className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+          <Link to="/" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
             ← Boutique
           </Link>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 md:px-10 py-16 fade-up">
-        <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Juridique</p>
+        <p className="text-[10px] tracking-[0.3em] text-accent-ink uppercase mb-4">Juridique</p>
         <h1 className="font-serif text-4xl font-normal mb-2">Politique de confidentialité</h1>
         <p className="text-xs text-muted mb-12">Dernière mise à jour : {LAST_UPDATE}</p>
 
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
                 ['Contact', 'Nom, email, message'],
               ].map(([ctx, data]) => (
                 <li key={ctx} className="flex gap-3">
-                  <span className="text-accent flex-shrink-0">◈</span>
+                  <span className="text-accent-ink flex-shrink-0">◈</span>
                   <span><strong>{ctx} :</strong> {data}</span>
                 </li>
               ))}
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
                 ['Messages de contact', '1 an'],
               ].map(([type, duree]) => (
                 <li key={type} className="flex gap-3">
-                  <span className="text-accent flex-shrink-0">◈</span>
+                  <span className="text-accent-ink flex-shrink-0">◈</span>
                   <span><strong>{type} :</strong> {duree}</span>
                 </li>
               ))}
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
                 ['Prestataire email (SMTP)', 'Envoi des emails transactionnels et de contact'],
               ].map(([dest, role]) => (
                 <li key={dest} className="flex gap-3">
-                  <span className="text-accent flex-shrink-0">◈</span>
+                  <span className="text-accent-ink flex-shrink-0">◈</span>
                   <span><strong>{dest} :</strong> {role}</span>
                 </li>
               ))}
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
                 ['Panier', 'Conserver votre panier entre les visites', 'Indéfini (localStorage)'],
               ].map(([name, usage, duree]) => (
                 <li key={name} className="flex gap-3">
-                  <span className="text-accent flex-shrink-0">◈</span>
+                  <span className="text-accent-ink flex-shrink-0">◈</span>
                   <span><strong>{name} :</strong> {usage} — <em className="text-muted">{duree}</em></span>
                 </li>
               ))}
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
                 'Droit de retirer votre consentement à tout moment',
               ].map(r => (
                 <li key={r} className="flex gap-3">
-                  <span className="text-accent flex-shrink-0">◈</span>
+                  <span className="text-accent-ink flex-shrink-0">◈</span>
                   <span>{r}</span>
                 </li>
               ))}

@@ -27,7 +27,7 @@ export default function OrderSuccess() {
       {error ? (
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Link to="/" className="text-sm text-accent hover:underline">← Retour à la boutique</Link>
+          <Link to="/" className="text-sm text-accent-ink hover:underline">← Retour à la boutique</Link>
         </div>
       ) : !order ? (
         <p className="text-muted text-sm animate-pulse">Vérification du paiement…</p>
@@ -36,7 +36,7 @@ export default function OrderSuccess() {
           <div className="text-5xl mb-6 text-green-600">✓</div>
           <h1 className="font-serif text-3xl mb-2">Merci pour votre commande !</h1>
           <p className="text-sm text-muted mb-1">Votre commande a bien été enregistrée.</p>
-          <p className="text-accent font-mono text-sm font-medium tracking-widest mb-8">{order.reference}</p>
+          <p className="text-accent-ink font-mono text-sm font-medium tracking-widest mb-8">{order.reference}</p>
 
           <div className="bg-white border border-stone p-6 text-left mb-8">
             {order.items.map(item => (

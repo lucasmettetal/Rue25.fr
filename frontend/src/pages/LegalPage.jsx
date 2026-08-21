@@ -15,14 +15,14 @@ export default function LegalPage() {
             <span className="font-serif text-[26px] font-normal tracking-[0.08em]">Rue</span>
             <span className="font-serif text-[30px] italic text-accent">25</span>
           </Link>
-          <Link to="/" className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+          <Link to="/" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
             ← Boutique
           </Link>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 md:px-10 py-16 fade-up">
-        <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Juridique</p>
+        <p className="text-[10px] tracking-[0.3em] text-accent-ink uppercase mb-4">Juridique</p>
         <h1 className="font-serif text-4xl font-normal mb-12">Mentions légales</h1>
 
         <div className="space-y-10 text-sm text-dark leading-relaxed">
@@ -67,7 +67,7 @@ export default function LegalPage() {
           <Section title="Données personnelles">
             <p>
               Le traitement des données personnelles collectées sur ce site est décrit dans notre{' '}
-              <Link to="/politique-de-confidentialite" className="text-accent hover:underline">
+              <Link to="/politique-de-confidentialite" className="text-accent-ink hover:underline">
                 Politique de confidentialité
               </Link>.
             </p>

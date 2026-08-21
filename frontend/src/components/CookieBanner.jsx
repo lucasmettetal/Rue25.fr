@@ -29,7 +29,7 @@ export default function CookieBanner() {
         </p>
         <div className="flex gap-3 flex-shrink-0">
           <button onClick={decline}
-            className="text-[11px] tracking-widest uppercase border border-white/20 text-white/50 px-5 py-2 hover:border-white/40 hover:text-white/70 transition-colors">
+            className="text-[11px] tracking-widest uppercase border border-white/45 text-white/85 px-5 py-2 hover:border-white/40 hover:text-white/70 transition-colors">
             Essentiels uniquement
           </button>
           <button onClick={accept}

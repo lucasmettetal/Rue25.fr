@@ -35,7 +35,7 @@ export default function AccountPage() {
           <div className="flex items-center gap-5">
             <span className="text-sm text-muted">{user?.firstName || user?.email}</span>
             <button onClick={() => { logout(); navigate('/'); }}
-              className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+              className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
               Déconnexion
             </button>
           </div>
@@ -68,7 +68,7 @@ export default function AccountPage() {
                 <div key={order.id} className="bg-white border border-stone p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <p className="text-xs font-mono text-accent font-medium tracking-widest">{order.reference}</p>
+                      <p className="text-xs font-mono text-accent-ink font-medium tracking-widest">{order.reference}</p>
                       <p className="text-xs text-muted mt-0.5">
                         {new Date(order.created_at).toLocaleDateString('fr-FR', {
                           day: 'numeric', month: 'long', year: 'numeric',

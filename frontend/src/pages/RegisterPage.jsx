@@ -80,7 +80,7 @@ export default function RegisterPage() {
           </form>
           <p className="text-center text-sm text-muted mt-7">
             Déjà un compte ?{' '}
-            <Link to="/connexion" className="text-accent hover:underline">Se connecter</Link>
+            <Link to="/connexion" className="text-accent-ink hover:underline">Se connecter</Link>
           </p>
         </div>
 
