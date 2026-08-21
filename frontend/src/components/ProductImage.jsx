@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { assetUrl } from '../lib/api.js';
 
 /**
  * Image de produit avec repli propre.
@@ -23,7 +24,7 @@ export default function ProductImage({ src, alt, className = '', loading = 'lazy
 
   return (
     <img
-      src={src}
+      src={assetUrl(src)}
       alt={alt}
       loading={loading}
       decoding="async"

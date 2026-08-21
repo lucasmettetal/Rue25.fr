@@ -17,6 +17,9 @@ const STATUS_STYLES = {
 
 const CATEGORIES = ['Chemises', 'Robes', 'Vestes', 'Pantalons', 'Pulls', 'Jupes'];
 
+// Doit rester aligné sur MAX_IMAGES côté API (src/routes/products.js).
+const MAX_IMAGES = 5;
+
 export default function AdminDashboard() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
@@ -316,7 +319,7 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
 }
 
 function ProductForm({ product, onClose, onSave }) {
-  const blank = { name: '', description: '', price: '', category: 'Chemises', image_url: '', in_stock: true, quantity: 0, sizes: [], materials: [] };
+  const blank = { name: '', description: '', price: '', category: 'Chemises', image_url: '', video_url: '', in_stock: true, quantity: 0, sizes: [], materials: [] };
   const [form, setForm]       = useState(product ? { ...product, price: product.price?.toString(), quantity: product.quantity ?? 0 } : blank);
 
   // La composition est saisie ligne par ligne (pourcentage + fibre) puis
@@ -330,7 +333,15 @@ function ProductForm({ product, onClose, onSave }) {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [uploading, setUploading] = useState(false);
-  const fileRef = useRef(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [imageUrlInput, setImageUrlInput]   = useState('');
+  const fileRef  = useRef(null);
+  const videoRef = useRef(null);
+
+  // Les produits antérieurs à la galerie n'ont qu'un `image_url` : il devient
+  // le premier visuel.
+  const [images, setImages] = useState(() =>
+    product?.images?.length ? [...product.images] : (product?.image_url ? [product.image_url] : []));
 
   const sizes = form.sizes || [];
   const scaleSizes = SIZE_SCALES[scale].sizes;
@@ -357,18 +368,69 @@ function ProductForm({ product, onClose, onSave }) {
     setDetailInput('');
   }
 
-  async function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function addImage(url) {
+    const value = String(url).trim();
+    if (!value) return;
+    setImages(list => (list.includes(value) || list.length >= MAX_IMAGES ? list : [...list, value]));
+  }
+
+  function addImageUrl() {
+    addImage(imageUrlInput);
+    setImageUrlInput('');
+  }
+
+  function removeImage(i) {
+    setImages(list => list.filter((_, idx) => idx !== i));
+  }
+
+  // Réordonner sert à choisir la principale : c'est toujours la première.
+  function moveImage(i, delta) {
+    setImages(list => {
+      const next = [...list];
+      const j = i + delta;
+      if (j < 0 || j >= next.length) return list;
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
+  async function handleImageFiles(e) {
+    const files = [...(e.target.files || [])];
+    e.target.value = '';               // permet de re-choisir le même fichier
+    if (!files.length) return;
+
+    const place = MAX_IMAGES - images.length;
+    if (place <= 0) return;
+    if (files.length > place) {
+      setError(`Seuls les ${place} premiers fichiers ont été retenus (${MAX_IMAGES} visuels maximum).`);
+    } else {
+      setError('');
+    }
+
     setUploading(true);
-    setError('');
     try {
-      const url = await api.uploadImage(file);
-      set('image_url', url);
+      for (const file of files.slice(0, place)) {
+        addImage(await api.uploadImage(file));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleVideoFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploadingVideo(true);
+    setError('');
+    try {
+      set('video_url', await api.uploadVideo(file));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploadingVideo(false);
     }
   }
 
@@ -384,6 +446,8 @@ function ProductForm({ product, onClose, onSave }) {
         quantity: Number(form.quantity),
         sizes: sortSizes(sizes),
         materials: toMaterialsList(composition, details),
+        images,
+        video_url: form.video_url || null,
       });
     } catch (e) {
       setError(e.message);
@@ -428,21 +492,86 @@ function ProductForm({ product, onClose, onSave }) {
               rows={3} placeholder="Description du vêtement…" className="w-full px-4 py-2.5 resize-y" />
           </div>
 
+          {/* Médias : jusqu'à 5 photos (la première sert de visuel principal
+              partout : catalogue, panier, aperçu de partage) et une vidéo. */}
           <div>
-            <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Image</label>
-            <div className="flex gap-2">
-              <input value={form.image_url} onChange={e => set('image_url', e.target.value)}
-                placeholder="https://images.unsplash.com/… ou envoyer un fichier" className="flex-1 px-4 py-2.5" />
-              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                className="border border-stone text-xs px-4 text-muted hover:border-dark whitespace-nowrap disabled:opacity-50">
-                {uploading ? 'Envoi…' : 'Choisir un fichier'}
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-            </div>
-            {form.image_url && (
-              <img src={form.image_url} alt="aperçu" className="mt-2 h-24 object-cover border border-stone"
-                onError={e => e.target.style.display = 'none'} />
+            <label className="text-[11px] uppercase tracking-widest text-muted block mb-2">
+              Photos <span className="normal-case tracking-normal">({images.length}/{MAX_IMAGES})</span>
+            </label>
+
+            {images.length > 0 && (
+              <div className="grid grid-cols-5 gap-2 mb-3">
+                {images.map((url, i) => (
+                  <div key={`${url}-${i}`} className="relative border border-stone">
+                    <ProductImage src={url} alt={`Visuel ${i + 1}`} className="w-full aspect-square" />
+
+                    {i === 0 && (
+                      <span className="absolute top-0 left-0 bg-dark text-white text-[8px] uppercase tracking-widest px-1.5 py-0.5">
+                        Principale
+                      </span>
+                    )}
+
+                    <button type="button" onClick={() => removeImage(i)}
+                      aria-label={`Retirer le visuel ${i + 1}`}
+                      className="absolute top-0 right-0 bg-white/90 text-muted hover:text-dark w-5 h-5 leading-none text-sm">
+                      ×
+                    </button>
+
+                    <div className="flex border-t border-stone">
+                      <button type="button" onClick={() => moveImage(i, -1)} disabled={i === 0}
+                        aria-label={`Déplacer le visuel ${i + 1} vers la gauche`}
+                        className="flex-1 text-xs text-muted hover:text-dark disabled:opacity-25 py-0.5">‹</button>
+                      <button type="button" onClick={() => moveImage(i, 1)} disabled={i === images.length - 1}
+                        aria-label={`Déplacer le visuel ${i + 1} vers la droite`}
+                        className="flex-1 text-xs text-muted hover:text-dark disabled:opacity-25 py-0.5 border-l border-stone">›</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
+
+            <div className="flex gap-2">
+              <input value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addImageUrl())}
+                disabled={images.length >= MAX_IMAGES}
+                placeholder={images.length >= MAX_IMAGES ? 'Maximum atteint' : 'Coller une adresse https://…'}
+                className="flex-1 px-4 py-2 text-sm disabled:opacity-50" />
+              <button type="button" onClick={addImageUrl} disabled={images.length >= MAX_IMAGES}
+                className="border border-stone text-xs px-4 text-muted hover:border-dark disabled:opacity-50">Ajouter</button>
+              <button type="button" onClick={() => fileRef.current?.click()}
+                disabled={uploading || images.length >= MAX_IMAGES}
+                className="border border-stone text-xs px-4 text-muted hover:border-dark whitespace-nowrap disabled:opacity-50">
+                {uploading ? 'Envoi…' : 'Choisir des fichiers'}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageFiles} />
+            </div>
+            <p className="text-[11px] text-muted mt-1.5">
+              JPEG, PNG, WebP ou AVIF — 5 Mo par photo. La première est celle qui s’affiche dans le catalogue.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-[11px] uppercase tracking-widest text-muted block mb-2">Vidéo</label>
+
+            {form.video_url ? (
+              <div className="flex gap-3 items-start">
+                <video src={api.assetUrl(form.video_url)} controls preload="metadata"
+                  className="w-48 aspect-video bg-stone border border-stone object-cover" />
+                <button type="button" onClick={() => set('video_url', '')}
+                  className="border border-stone text-xs px-4 py-2 text-muted hover:border-dark">Retirer</button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button type="button" onClick={() => videoRef.current?.click()} disabled={uploadingVideo}
+                  className="border border-stone text-xs px-4 py-2 text-muted hover:border-dark disabled:opacity-50">
+                  {uploadingVideo ? 'Envoi…' : 'Choisir une vidéo'}
+                </button>
+                <input ref={videoRef} type="file" accept="video/mp4,video/webm" className="hidden" onChange={handleVideoFile} />
+              </div>
+            )}
+            <p className="text-[11px] text-muted mt-1.5">
+              MP4 ou WebM — 30 Mo maximum, une seule vidéo par pièce.
+            </p>
           </div>
 
           {/* Tailles : on coche dans un barème plutôt que de retaper « S, M, L »
@@ -479,7 +608,7 @@ function ProductForm({ product, onClose, onSave }) {
             <div className="flex gap-2 mt-3">
               <input value={extraSize} onChange={e => setExtraSize(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtraSize())}
-                placeholder="Autre taille (42 long, 3 ans…)" className="flex-1 px-4 py-2 text-sm" />
+                placeholder="Taille hors barème : 42 long, 3 ans…" className="flex-1 px-4 py-2 text-sm" />
               <button type="button" onClick={addExtraSize}
                 className="border border-stone text-xs px-4 text-muted hover:border-dark">Ajouter</button>
             </div>

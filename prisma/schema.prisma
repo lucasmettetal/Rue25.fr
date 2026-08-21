@@ -48,7 +48,12 @@ model Product {
   slug        String   @unique
   description String?
   price       Decimal  @db.Decimal(10, 2)
+  // Visuel principal, tenu à jour sur images[0] par l'API : le panier stocké
+  // côté navigateur et les aperçus de partage continuent de le lire.
   imageUrl    String?  @map("image_url")
+  // Galerie complète, 5 visuels au maximum, le premier faisant office de principal.
+  images      String[]
+  videoUrl    String?  @map("video_url")
   inStock     Boolean  @default(true) @map("in_stock")
   quantity    Int      @default(0)
   sizes       String[]

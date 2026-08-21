@@ -24,6 +24,32 @@ async function uniqueSlug(base) {
   return slug;
 }
 
+export const MAX_IMAGES = 5;
+
+// Nettoie la galerie reçue : chaque entrée est une URL non vide, sans doublon.
+// La première est le visuel principal. `image_url` sert de repli pour les
+// appels qui n'envoient encore qu'une seule image.
+function normalizeImages(images, imageUrl) {
+  const source = Array.isArray(images)
+    ? images
+    : (imageUrl ? [imageUrl] : []);
+
+  const seen = new Set();
+  const out = [];
+  for (const raw of source) {
+    const url = String(raw ?? '').trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    out.push(url);
+  }
+  return out;
+}
+
+function normalizeVideo(videoUrl) {
+  const url = String(videoUrl ?? '').trim();
+  return url || null;
+}
+
 async function resolveCategory(name) {
   const slug = slugify(name);
   return prisma.category.upsert({
@@ -42,6 +68,8 @@ function toJSON(p) {
     price: p.price,
     category: p.category?.name ?? null,
     image_url: p.imageUrl,
+    images: p.images ?? [],
+    video_url: p.videoUrl ?? null,
     in_stock: p.inStock,
     quantity: p.quantity,
     sizes: p.sizes,
@@ -112,12 +140,16 @@ router.get('/:idOrSlug', async (req, res) => {
 // ── Admin (JWT required) ────────────────────────────────────────────────────
 
 router.post('/', requireAuth, async (req, res) => {
-  const { name, description, price, category, image_url, quantity, sizes, materials } = req.body;
+  const { name, description, price, category, image_url, images, video_url, quantity, sizes, materials } = req.body;
   if (!name || !price || !category || quantity === undefined) {
     return res.status(400).json({ error: 'Nom, prix, catégorie et quantité requis' });
   }
   if (Number(quantity) < 0) {
     return res.status(400).json({ error: 'Quantité invalide' });
+  }
+  const gallery = normalizeImages(images, image_url);
+  if (gallery.length > MAX_IMAGES) {
+    return res.status(400).json({ error: `${MAX_IMAGES} visuels maximum par produit` });
   }
   try {
     const cat = await resolveCategory(category);
@@ -129,7 +161,9 @@ router.post('/', requireAuth, async (req, res) => {
         slug,
         description: description || null,
         price,
-        imageUrl: image_url || null,
+        imageUrl: gallery[0] || null,
+        images: gallery,
+        videoUrl: normalizeVideo(video_url),
         quantity: qty,
         inStock: qty > 0,
         sizes: sizes || [],
@@ -146,13 +180,24 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 router.put('/:id', requireAuth, async (req, res) => {
-  const { name, description, price, category, image_url, quantity, sizes, materials } = req.body;
+  const { name, description, price, category, image_url, images, video_url, quantity, sizes, materials } = req.body;
   try {
     const data = {};
     if (name !== undefined)        data.name        = name;
     if (description !== undefined) data.description = description;
     if (price !== undefined)       data.price       = price;
-    if (image_url !== undefined)   data.imageUrl    = image_url;
+    if (video_url !== undefined)   data.videoUrl    = normalizeVideo(video_url);
+
+    // La galerie et le visuel principal ne se dissocient jamais : dès que
+    // l'un des deux champs est fourni, on recalcule les deux ensemble.
+    if (images !== undefined || image_url !== undefined) {
+      const gallery = normalizeImages(images, image_url);
+      if (gallery.length > MAX_IMAGES) {
+        return res.status(400).json({ error: `${MAX_IMAGES} visuels maximum par produit` });
+      }
+      data.images   = gallery;
+      data.imageUrl = gallery[0] || null;
+    }
     if (quantity !== undefined) {
       if (Number(quantity) < 0) return res.status(400).json({ error: 'Quantité invalide' });
       data.quantity = Number(quantity);

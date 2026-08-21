@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getProduct, assetUrl } from '../lib/api.js';
 import { useCart } from '../hooks/useCart.jsx';
-import ProductImage from '../components/ProductImage.jsx';
+import ProductGallery from '../components/ProductGallery.jsx';
 import CartDrawer from '../components/CartDrawer.jsx';
 import Seo, { SITE_URL, SITE_NAME } from '../components/Seo.jsx';
 import { parseMaterials, formatFibre } from '../lib/materials.js';
@@ -29,6 +29,13 @@ export default function ProductPage() {
 
   // Composition chiffrée d'un côté, finitions non textiles de l'autre.
   const matiere = useMemo(() => parseMaterials(product?.materials), [product]);
+
+  // `images` fait foi ; `image_url` sert de repli pour les pièces enregistrées
+  // avant la galerie.
+  const visuels = useMemo(() => {
+    if (product?.images?.length) return product.images;
+    return product?.image_url ? [product.image_url] : [];
+  }, [product]);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,11 +112,10 @@ export default function ProductPage() {
             </nav>
 
             <div className="grid md:grid-cols-2 gap-8 md:gap-14 items-start">
-              <ProductImage
-                src={product.image_url}
-                alt={product.name}
-                loading="eager"
-                className="w-full aspect-[3/4] bg-stone" />
+              <ProductGallery
+                images={visuels}
+                video={product.video_url}
+                alt={product.name} />
 
               <div>
                 <p className="text-[10px] tracking-[0.25em] text-accent uppercase mb-3">{product.category}</p>
@@ -199,7 +205,10 @@ export default function ProductPage() {
 // Métadonnées + données structurées schema.org/Product : c'est ce qui permet à
 // Google d'afficher le prix et la disponibilité sous le résultat de recherche.
 function seoProps(p) {
-  const image = p.image_url ? assetUrl(p.image_url) : undefined;
+  const galerie = (p.images?.length ? p.images : [p.image_url])
+    .filter(Boolean)
+    .map(assetUrl);
+  const image = galerie[0];
   const { composition } = parseMaterials(p.materials);
   const description = (p.description || `${p.name} — pièce artisanale confectionnée à la main par Rue 25.`)
     .slice(0, 155);
@@ -215,7 +224,7 @@ function seoProps(p) {
       '@type': 'Product',
       name: p.name,
       description,
-      image: image ? [image] : undefined,
+      image: galerie.length ? galerie : undefined,
       category: p.category || undefined,
       material: composition.length ? composition.map(formatFibre).join(', ') : undefined,
       brand: { '@type': 'Brand', name: SITE_NAME },
