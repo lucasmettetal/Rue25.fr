@@ -61,6 +61,8 @@ export default function Storefront() {
   const { count }  = useCart();
   const { user }   = useCustomerAuth();
 
+  const filtreActif = category !== 'Tous' || search.trim() !== '';
+
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
@@ -255,9 +257,25 @@ export default function Storefront() {
             ))}
           </div>
         ) : products.length === 0 ? (
+          // Un catalogue vide et une recherche infructueuse n'appellent pas le
+          // même message : « essayez une autre catégorie » n'a aucun sens quand
+          // aucune catégorie n'a de pièce.
           <div className="text-center py-20 text-muted">
-            <div className="font-serif text-3xl mb-2">Aucun résultat</div>
-            <div className="text-sm">Essayez une autre catégorie.</div>
+            {filtreActif ? (
+              <>
+                <div className="font-serif text-3xl mb-2">Aucun résultat</div>
+                <div className="text-sm">Essayez une autre catégorie ou un autre mot.</div>
+              </>
+            ) : (
+              <>
+                <div className="font-serif text-3xl mb-2">La collection arrive</div>
+                <div className="text-sm mb-8">Les premières pièces seront mises en ligne très bientôt.</div>
+                <Link to="/sur-mesure"
+                  className="inline-block bg-dark text-white text-[12px] tracking-[0.08em] uppercase px-7 py-3">
+                  Découvrir le sur mesure
+                </Link>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-10">
