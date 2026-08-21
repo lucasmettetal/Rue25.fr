@@ -121,6 +121,8 @@ stripe listen --forward-to localhost:3001/api/stripe/webhook
 | GET     | /api/products             | —     | Liste (filtres : `category`, `search`) |
 | GET     | /api/products/categories  | —     | Liste des catégories |
 | GET     | /api/products/:idOrSlug   | —     | Détail produit (identifiant **ou** slug) |
+| POST    | /api/upload               | Admin | Envoi d'une photo (5 Mo, JPEG/PNG/WebP/AVIF) |
+| POST    | /api/upload/video         | Admin | Envoi d'une vidéo (30 Mo, MP4/WebM) |
 | POST    | /api/products             | Admin | Créer un produit |
 | PUT     | /api/products/:id         | Admin | Modifier un produit |
 | DELETE  | /api/products/:id         | Admin | Supprimer un produit |
@@ -163,7 +165,8 @@ Stage 4 - MVP/
 │   └── seed.js                # Données initiales (catégories, produits, admin)
 ├── scripts/
 │   ├── rotate-admin.js         # Rotation de l'identifiant admin (via variables d'env)
-│   └── purge-test-data.js      # Nettoyage des données de test avant ouverture
+│   ├── purge-test-data.js      # Nettoyage des données de test avant ouverture
+│   └── prune-uploads.js        # Supprime les fichiers téléversés plus référencés
 ├── src/
 │   ├── index.js               # Point d'entrée Express
 │   ├── lib/
@@ -259,6 +262,28 @@ npm run deploy        # build + wrangler deploy
   les liens internes et le sitemap sont tous sans barre finale.
 - Chaque déploiement reconstruit le sitemap et les aperçus de partage à partir
   de l'API : ils reflètent donc le catalogue au moment du déploiement.
+
+---
+
+## Visuels d'un produit
+
+Chaque pièce accepte **5 photos au maximum et une vidéo**. Le champ `images`
+fait foi et son premier élément est le visuel principal : c'est lui qui apparaît
+dans le catalogue, dans le panier et dans l'aperçu de partage. La colonne
+`image_url` est conservée et tenue à jour sur `images[0]` par l'API, parce que le
+panier (stocké dans le navigateur) et le pré-rendu la lisent encore.
+
+Dans l'admin, on réordonne les vignettes pour choisir la principale. Côté
+boutique, la fiche affiche un grand visuel et une bande de vignettes ; la vidéo
+occupe la dernière et n'est chargée que si le visiteur la demande.
+
+Les fichiers téléversés vivent sur le volume Railway monté sur `/app/uploads`.
+Remplacer une photo n'efface pas l'ancienne : `scripts/prune-uploads.js` fait le
+ménage (aperçu par défaut, suppression avec `--confirm`).
+
+> Les visuels sont servis par l'API, donc par Railway. Une vidéo de 30 Mo vue
+> mille fois, c'est 30 Go de bande passante : surveillez la consommation, et
+> compressez avant d'envoyer.
 
 ---
 

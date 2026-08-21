@@ -104,19 +104,25 @@ export const updateCustomOrderStatus = (id, status) =>
 // ── Upload image (admin) ─────────────────────────────────────────────────────
 // multipart/form-data : on n'impose pas de Content-Type, le navigateur ajoute
 // la boundary lui-même. Renvoie une URL absolue directement affichable.
-export async function uploadImage(file) {
+// Renvoie le chemin relatif (/uploads/...) et non une URL absolue : c'est lui
+// qui part en base. Si l'API change un jour de domaine, les visuels suivent,
+// puisque `assetUrl` résout le préfixe à l'affichage.
+async function uploadFile(path, field, file) {
   const token = getAdminToken();
   const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch(`${BASE}/upload`, {
+  formData.append(field, file);
+  const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Erreur upload');
-  return assetUrl(data.url);
+  return data.url;
 }
+
+export const uploadImage = (file) => uploadFile('/upload', 'image', file);
+export const uploadVideo = (file) => uploadFile('/upload/video', 'video', file);
 
 // ── Contact ──────────────────────────────────────────────────────────────────
 export const sendContact = (data) =>
