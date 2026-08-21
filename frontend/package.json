@@ -4,9 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/generate-seo.mjs",
     "preview": "vite preview",
-    "lint": "eslint src/"
+    "lint": "eslint src/ scripts/",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -23,6 +24,7 @@
     "globals": "^15.14.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.4",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "wrangler": "^4.125.0"
   }
 }

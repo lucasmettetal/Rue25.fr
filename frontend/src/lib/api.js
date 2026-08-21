@@ -74,6 +74,8 @@ export const getProducts = (params = {}) => {
   const qs = new URLSearchParams(params).toString();
   return request(`/products${qs ? '?' + qs : ''}`);
 };
+// Accepte l'identifiant numérique ou le slug (URL publique /produit/:slug).
+export const getProduct = (idOrSlug) => request(`/products/${idOrSlug}`);
 export const createProduct = (data) =>
   request('/products', { method: 'POST', body: JSON.stringify(data) });
 export const updateProduct = (id, data) =>

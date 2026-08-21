@@ -120,7 +120,7 @@ stripe listen --forward-to localhost:3001/api/stripe/webhook
 |---------|---------------------------|-------|-------------|
 | GET     | /api/products             | —     | Liste (filtres : `category`, `search`) |
 | GET     | /api/products/categories  | —     | Liste des catégories |
-| GET     | /api/products/:id         | —     | Détail produit |
+| GET     | /api/products/:idOrSlug   | —     | Détail produit (identifiant **ou** slug) |
 | POST    | /api/products             | Admin | Créer un produit |
 | PUT     | /api/products/:id         | Admin | Modifier un produit |
 | DELETE  | /api/products/:id         | Admin | Supprimer un produit |
@@ -161,6 +161,9 @@ Stage 4 - MVP/
 │   ├── schema.prisma          # Modèles (User, Product, Order, CustomOrder, Address)
 │   ├── migrations/
 │   └── seed.js                # Données initiales (catégories, produits, admin)
+├── scripts/
+│   ├── rotate-admin.js         # Rotation de l'identifiant admin (via variables d'env)
+│   └── purge-test-data.js      # Nettoyage des données de test avant ouverture
 ├── src/
 │   ├── index.js               # Point d'entrée Express
 │   ├── lib/
@@ -176,8 +179,14 @@ Stage 4 - MVP/
 │       ├── stripe.js          # Checkout + webhook signé
 │       └── customOrders.js
 └── frontend/
-    ├── Dockerfile             # Build Vite → nginx
+    ├── Dockerfile             # Build Vite → nginx (développement Docker)
     ├── nginx.conf             # SPA + proxy /api → backend
+    ├── wrangler.jsonc         # Déploiement Cloudflare Workers (production)
+    ├── public/
+    │   ├── _headers           # Cache et en-têtes de sécurité (Cloudflare)
+    │   └── robots.txt
+    ├── scripts/
+    │   └── generate-seo.mjs   # sitemap.xml + aperçus de partage (post-build)
     └── src/
         ├── lib/api.js         # Tous les appels HTTP
         ├── hooks/
@@ -191,9 +200,127 @@ Stage 4 - MVP/
         │   ├── RegisterPage.jsx
         │   ├── AccountPage.jsx
         │   ├── OrderSuccess.jsx
+        │   ├── ProductPage.jsx      # Fiche produit /produit/:slug
+        │   ├── ContactPage.jsx
+        │   ├── LegalPage.jsx        # Mentions légales
+        │   ├── PrivacyPage.jsx      # Politique de confidentialité
         │   ├── AdminLogin.jsx
         │   └── AdminDashboard.jsx
         └── components/
-            ├── ProductModal.jsx
+            ├── ProductImage.jsx    # Image produit + repli « Photo à venir »
+            ├── Seo.jsx             # Titre / description / Open Graph / données structurées
+            ├── CookieBanner.jsx
             └── CartDrawer.jsx
 ```
+
+---
+
+## Déploiement
+
+| Partie | Hébergeur | Déclenchement |
+|--------|-----------|---------------|
+| API | Railway | automatique au push sur `main` |
+| Front | Cloudflare Workers (Static Assets) | job `deploy-frontend` de la CI, après le lint et les tests |
+
+Le front ne se déploie qu'une fois `backend` **et** `frontend` au vert : une
+version qui ne compile pas ne part jamais en production.
+
+### Mise en place (une seule fois)
+
+Deux secrets à créer dans **Settings → Secrets and variables → Actions** du
+dépôt GitHub :
+
+| Secret | Où le trouver |
+|--------|----------------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare → My Profile → API Tokens → Create Token → Custom → permission **Edit Cloudflare Workers** |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare → Workers & Pages → colonne de droite, **Account ID** |
+
+L'URL de l'API est publique, donc pas un secret : elle est écrite dans
+`.github/workflows/ci.yml` et surchargeable par une **variable** de dépôt
+`VITE_API_URL`.
+
+### Déployer à la main
+
+```bash
+cd frontend
+npx wrangler login
+npm run deploy        # build + wrangler deploy
+```
+
+### Points d'attention
+
+- `frontend/wrangler.jsonc` doit porter le **nom exact du Worker existant**
+  (`rue25`, lisible dans `rue25.lucas-mettetal2.workers.dev`). Un nom différent
+  créerait un second Worker, et rue25.fr resterait branché sur l'ancien.
+- Les **domaines personnalisés restent gérés dans le tableau de bord** : le
+  fichier ne déclare aucune route, `wrangler deploy` n'y touche donc pas.
+- `html_handling: "drop-trailing-slash"` : sans cela Cloudflare redirigerait
+  `/produit/ma-piece` vers `/produit/ma-piece/`, alors que les URL canoniques,
+  les liens internes et le sitemap sont tous sans barre finale.
+- Chaque déploiement reconstruit le sitemap et les aperçus de partage à partir
+  de l'API : ils reflètent donc le catalogue au moment du déploiement.
+
+---
+
+## Tailles et composition des produits
+
+Le formulaire d'administration ne demande plus de saisir « S, M, L » ni
+« Lin 100% » à la main :
+
+- **Tailles** — on coche dans un barème (lettres, numérique FR, taille unique),
+  avec un champ libre pour les cas particuliers. L'ordre enregistré est
+  toujours celui du barème, quel que soit l'ordre des clics.
+- **Composition** — une ligne par fibre : pourcentage + dénomination, avec un
+  total affiché en direct. Le règlement (UE) n° 1007/2011 impose le pourcentage
+  en masse de chaque fibre **par ordre décroissant** ; le tri est donc fait
+  automatiquement et un total ≠ 100 % déclenche un avertissement.
+- **Détails & finitions** — boutons, doublure, fermeture : ce qui n'est pas une
+  fibre est saisi à part et ne compte pas dans les 100 %.
+
+En base, `materials` reste un tableau de chaînes (aucune migration) : la
+conversion dans les deux sens est centralisée dans `frontend/src/lib/materials.js`,
+qui relit aussi l'ancien format (« Lin 100% »).
+
+---
+
+## Nettoyage des données de test
+
+Avant l'ouverture au public, `scripts/purge-test-data.js` vide les commandes
+laissées par les essais. **Il n'affiche qu'un aperçu tant qu'on ne passe pas
+`--confirm`** ; la suppression est ensuite définitive.
+
+```bash
+node scripts/purge-test-data.js                      # aperçu, ne supprime rien
+node scripts/purge-test-data.js --confirm            # commandes uniquement
+node scripts/purge-test-data.js --confirm --sur-mesure --clients --produits
+```
+
+Les comptes **admin ne sont jamais supprimés**. Les produits ne peuvent l'être
+qu'après les commandes qui les référencent (`order_items.product_id` est en
+`onDelete: Restrict`) : le script s'en charge dans le bon ordre.
+
+---
+
+## Référencement (SEO)
+
+Chaque pièce a son adresse propre : `/produit/:slug`. Le composant `Seo`
+renseigne titre, description, URL canonique, Open Graph et données structurées
+`schema.org/Product` — c'est ce qui permet à Google d'afficher le prix et la
+disponibilité sous le résultat.
+
+Une application monopage a toutefois une limite : les robots des réseaux
+sociaux n'exécutent pas le JavaScript. `npm run build` lance donc, après Vite,
+le script `frontend/scripts/generate-seo.mjs` qui écrit :
+
+- `dist/sitemap.xml` — pages fixes + une entrée par produit ;
+- `dist/<route>/index.html` — une copie de l'index avec les balises déjà
+  écrites en dur, pour que le partage d'un lien affiche le bon aperçu.
+
+Le script interroge l'API pour récupérer les produits (`SEO_API_URL` ou
+`VITE_API_URL`, sinon l'API de production). Si elle est injoignable, le build
+continue avec les seules pages fixes.
+
+> Les fiches produits sont figées à la compilation : après avoir ajouté ou
+> modifié un produit dans l'admin, redéployez le front pour rafraîchir le
+> sitemap et les aperçus de partage. Le contenu affiché aux visiteurs, lui,
+> vient toujours de l'API en direct.

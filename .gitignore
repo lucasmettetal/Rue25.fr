@@ -12,6 +12,9 @@ dist/
 build/
 frontend/dist/
 
+# État local du runtime Cloudflare (wrangler dev)
+.wrangler/
+
 # Prisma
 backend/prisma/migrations/dev.db
 

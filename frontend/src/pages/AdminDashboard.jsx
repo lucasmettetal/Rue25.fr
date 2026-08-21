@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import * as api from '../lib/api.js';
+import ProductImage from '../components/ProductImage.jsx';
+import {
+  FIBRES, DETAILS_SUGGERES, SIZE_SCALES,
+  detectScale, sortSizes, parseMaterials, totalPercent, toMaterialsList,
+} from '../lib/materials.js';
 
 const STATUS_STYLES = {
   nouveau:    { bg: 'bg-yellow-50', text: 'text-yellow-800',  label: 'Nouveau' },
@@ -286,7 +291,7 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
   return (
     <div className="bg-white border border-stone">
       <div className="relative aspect-[3/4] overflow-hidden">
-        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+        <ProductImage src={product.image_url} alt={product.name} className="w-full h-full" />
         <span className={`absolute top-2.5 right-2.5 text-[10px] px-2.5 py-0.5 uppercase tracking-widest ${product.in_stock ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
           {product.in_stock ? 'En stock' : 'Épuisé'}
         </span>
@@ -313,16 +318,44 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
 function ProductForm({ product, onClose, onSave }) {
   const blank = { name: '', description: '', price: '', category: 'Chemises', image_url: '', in_stock: true, quantity: 0, sizes: [], materials: [] };
   const [form, setForm]       = useState(product ? { ...product, price: product.price?.toString(), quantity: product.quantity ?? 0 } : blank);
-  const [matInput, setMatInput] = useState('');
-  const [sizeInput, setSizeInput] = useState('');
+
+  // La composition est saisie ligne par ligne (pourcentage + fibre) puis
+  // reconstruite en tableau de chaînes à l'enregistrement — voir lib/materials.js.
+  const [composition, setComposition] = useState(() => parseMaterials(product?.materials).composition);
+  const [details, setDetails]         = useState(() => parseMaterials(product?.materials).details);
+  const [detailInput, setDetailInput] = useState('');
+  const [scale, setScale]             = useState(() => detectScale(product?.sizes));
+  const [extraSize, setExtraSize]     = useState('');
+
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
 
+  const sizes = form.sizes || [];
+  const scaleSizes = SIZE_SCALES[scale].sizes;
+  // Tailles saisies à la main, hors de tout barème (« 42 long », « 3 ans »).
+  const horsBareme = sizes.filter(s => !Object.values(SIZE_SCALES).some(sc => sc.sizes.includes(s)));
+  const total = totalPercent(composition);
+  const compositionIncomplete = composition.length > 0 && Math.round(total) !== 100;
+
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
-  function addTag(field, val, clear) { if (val.trim()) { set(field, [...(form[field] || []), val.trim()]); clear(''); } }
-  function removeTag(field, i) { set(field, form[field].filter((_, idx) => idx !== i)); }
+
+  function toggleSize(size) {
+    set('sizes', sortSizes(sizes.includes(size) ? sizes.filter(s => s !== size) : [...sizes, size]));
+  }
+
+  function addExtraSize() {
+    const value = extraSize.trim();
+    if (value && !sizes.includes(value)) set('sizes', sortSizes([...sizes, value]));
+    setExtraSize('');
+  }
+
+  function addDetail() {
+    const value = detailInput.trim();
+    if (value && !details.includes(value)) setDetails(d => [...d, value]);
+    setDetailInput('');
+  }
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0];
@@ -345,7 +378,13 @@ function ProductForm({ product, onClose, onSave }) {
     setLoading(true);
     setError('');
     try {
-      await onSave({ ...form, price: parseFloat(form.price), quantity: Number(form.quantity) });
+      await onSave({
+        ...form,
+        price: parseFloat(form.price),
+        quantity: Number(form.quantity),
+        sizes: sortSizes(sizes),
+        materials: toMaterialsList(composition, details),
+      });
     } catch (e) {
       setError(e.message);
       setLoading(false);
@@ -406,26 +445,130 @@ function ProductForm({ product, onClose, onSave }) {
             )}
           </div>
 
-          {[['Tailles', 'sizes', sizeInput, setSizeInput, 'S, M, L, 38…'], ['Matériaux', 'materials', matInput, setMatInput, 'Lin 100%…']].map(([label, field, val, setVal, ph]) => (
-            <div key={field}>
-              <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">{label}</label>
-              <div className="flex gap-2 mb-2">
-                <input value={val} onChange={e => setVal(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag(field, val, setVal))}
-                  placeholder={ph} className="flex-1 px-4 py-2" />
-                <button onClick={() => addTag(field, val, setVal)}
-                  className="border border-stone text-xs px-4 text-muted hover:border-dark">Ajouter</button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {(form[field] || []).map((item, i) => (
-                  <span key={i} className="text-xs border border-stone px-3 py-1 flex items-center gap-1.5">
-                    {item}
-                    <button onClick={() => removeTag(field, i)} className="text-muted hover:text-dark leading-none">×</button>
+          {/* Tailles : on coche dans un barème plutôt que de retaper « S, M, L »
+              à chaque produit — moins de fautes et un ordre toujours cohérent. */}
+          <div>
+            <label className="text-[11px] uppercase tracking-widest text-muted block mb-2">Tailles disponibles</label>
+
+            <div className="flex gap-1 mb-3">
+              {Object.entries(SIZE_SCALES).map(([key, { label }]) => (
+                <button key={key} type="button" onClick={() => setScale(key)}
+                  className={`text-[11px] px-3 py-1.5 border transition-colors ${
+                    scale === key ? 'bg-dark text-white border-dark' : 'border-stone text-muted hover:border-dark'
+                  }`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {scaleSizes.map(size => {
+                const checked = sizes.includes(size);
+                return (
+                  <label key={size}
+                    className={`text-xs px-3.5 py-2 border cursor-pointer select-none transition-colors ${
+                      checked ? 'bg-dark text-white border-dark' : 'border-stone text-muted hover:border-dark'
+                    }`}>
+                    <input type="checkbox" checked={checked} onChange={() => toggleSize(size)} className="sr-only" />
+                    {size}
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2 mt-3">
+              <input value={extraSize} onChange={e => setExtraSize(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtraSize())}
+                placeholder="Autre taille (42 long, 3 ans…)" className="flex-1 px-4 py-2 text-sm" />
+              <button type="button" onClick={addExtraSize}
+                className="border border-stone text-xs px-4 text-muted hover:border-dark">Ajouter</button>
+            </div>
+
+            {horsBareme.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {horsBareme.map(size => (
+                  <span key={size} className="text-xs border border-stone px-3 py-1 flex items-center gap-1.5">
+                    {size}
+                    <button type="button" onClick={() => toggleSize(size)} className="text-muted hover:text-dark leading-none">×</button>
                   </span>
                 ))}
               </div>
+            )}
+
+            {sizes.length === 0 && (
+              <p className="text-[11px] text-muted mt-2">Aucune taille : la pièce sera vendue sans choix de taille.</p>
+            )}
+          </div>
+
+          {/* Composition : le règlement (UE) 1007/2011 impose le pourcentage de
+              chaque fibre, par ordre décroissant. Le tri est donc automatique. */}
+          <div>
+            <label className="text-[11px] uppercase tracking-widest text-muted block mb-2">Composition</label>
+
+            <datalist id="fibres-textiles">
+              {FIBRES.map(f => <option key={f} value={f} />)}
+            </datalist>
+
+            <div className="flex flex-col gap-2">
+              {composition.map((row, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <input type="number" min="0" max="100" value={row.percent}
+                    onChange={e => setComposition(c => c.map((r, idx) => idx === i ? { ...r, percent: e.target.value } : r))}
+                    placeholder="80" className="w-20 px-3 py-2 text-sm" />
+                  <span className="text-muted text-sm">%</span>
+                  <input list="fibres-textiles" value={row.fibre}
+                    onChange={e => setComposition(c => c.map((r, idx) => idx === i ? { ...r, fibre: e.target.value } : r))}
+                    placeholder="lin" className="flex-1 px-4 py-2 text-sm" />
+                  <button type="button" onClick={() => setComposition(c => c.filter((_, idx) => idx !== i))}
+                    className="text-muted hover:text-dark px-2 leading-none" aria-label="Retirer cette fibre">×</button>
+                </div>
+              ))}
             </div>
-          ))}
+
+            <div className="flex items-center justify-between mt-2">
+              <button type="button" onClick={() => setComposition(c => [...c, { percent: '', fibre: '' }])}
+                className="border border-stone text-xs px-4 py-2 text-muted hover:border-dark">+ Ajouter une fibre</button>
+              {composition.length > 0 && (
+                <span className={`text-xs ${compositionIncomplete ? 'text-amber-700' : 'text-green-700'}`}>
+                  Total : {Math.round(total * 10) / 10} %
+                </span>
+              )}
+            </div>
+
+            {compositionIncomplete && (
+              <p className="text-[11px] text-amber-700 mt-1.5">
+                Le total devrait atteindre 100 % : c’est ce qu’impose l’étiquetage textile européen.
+              </p>
+            )}
+          </div>
+
+          {/* Tout ce qui n'est pas une fibre : boutons, doublure, finitions.
+              Ces éléments ne comptent pas dans les 100 % de la composition. */}
+          <div>
+            <label className="text-[11px] uppercase tracking-widest text-muted block mb-1.5">Détails & finitions</label>
+
+            <datalist id="details-produit">
+              {DETAILS_SUGGERES.map(d => <option key={d} value={d} />)}
+            </datalist>
+
+            <div className="flex gap-2 mb-2">
+              <input list="details-produit" value={detailInput} onChange={e => setDetailInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addDetail())}
+                placeholder="Boutons en nacre…" className="flex-1 px-4 py-2 text-sm" />
+              <button type="button" onClick={addDetail}
+                className="border border-stone text-xs px-4 text-muted hover:border-dark">Ajouter</button>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {details.map((item, i) => (
+                <span key={i} className="text-xs border border-stone px-3 py-1 flex items-center gap-1.5">
+                  {item}
+                  <button type="button" onClick={() => setDetails(d => d.filter((_, idx) => idx !== i))}
+                    className="text-muted hover:text-dark leading-none">×</button>
+                </span>
+              ))}
+            </div>
+          </div>
 
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={form.in_stock} onChange={e => set('in_stock', e.target.checked)}

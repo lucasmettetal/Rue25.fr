@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { submitCustomOrder } from '../lib/api.js';
+import Seo from '../components/Seo.jsx';
 
 const GARMENT_TYPES = ['Chemise', 'Robe', 'Veste', 'Manteau', 'Pantalon', 'Jupe', 'Pull', 'Autre'];
 const BUDGETS = ['Moins de 200 €', '200 – 400 €', '400 – 700 €', '700 – 1 000 €', 'Plus de 1 000 €'];
@@ -44,6 +45,11 @@ export default function SurMesurePage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Sur mesure"
+        description="Faites confectionner un vêtement unique à vos mesures dans l'atelier Rue 25 : choix des matières, de la coupe et des finitions."
+        path="/sur-mesure" />
+
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-stone">
@@ -61,7 +67,7 @@ export default function SurMesurePage() {
       {step === 'success' ? (
         <SuccessView reference={reference} />
       ) : (
-        <>
+        <main>
           {/* Hero */}
           <section className="max-w-4xl mx-auto px-4 md:px-10 pt-10 md:pt-16 pb-10">
             <p className="text-[10px] tracking-[0.35em] uppercase text-accent mb-4">Service exclusif</p>
@@ -176,7 +182,7 @@ export default function SurMesurePage() {
               </div>
             </form>
           </section>
-        </>
+        </main>
       )}
     </div>
   );
@@ -204,7 +210,7 @@ function Field({ label, value, onChange, placeholder, type = 'text' }) {
 
 function SuccessView({ reference }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center fade-up">
+    <main className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center fade-up">
       <div className="text-5xl mb-6">✓</div>
       <h2 className="font-serif text-3xl mb-2">Demande envoyée !</h2>
       <p className="text-muted text-sm mb-1">Nous avons bien reçu votre demande sur mesure.</p>
@@ -215,6 +221,6 @@ function SuccessView({ reference }) {
       <Link to="/" className="bg-dark text-white text-[12px] tracking-widest uppercase px-10 py-3">
         Retour à la boutique
       </Link>
-    </div>
+    </main>
   );
 }

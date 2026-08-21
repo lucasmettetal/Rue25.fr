@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
+import Seo from '../components/Seo.jsx';
 
 const LAST_UPDATE = '20 août 2026';
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Politique de confidentialité"
+        description="Comment Rue 25 collecte, utilise et protège vos données personnelles, conformément au RGPD."
+        path="/politique-de-confidentialite" />
+
       <header className="sticky top-0 z-40 bg-white border-b border-stone">
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
           <Link to="/" className="flex items-baseline gap-2">
@@ -17,7 +23,7 @@ export default function PrivacyPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 md:px-10 py-16 fade-up">
+      <main className="max-w-3xl mx-auto px-4 md:px-10 py-16 fade-up">
         <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Juridique</p>
         <h1 className="font-serif text-4xl font-normal mb-2">Politique de confidentialité</h1>
         <p className="text-xs text-muted mb-12">Dernière mise à jour : {LAST_UPDATE}</p>
@@ -166,7 +172,7 @@ export default function PrivacyPage() {
           <Link to="/mentions-legales" className="hover:text-dark transition-colors">Mentions légales</Link>
           <Link to="/" className="hover:text-dark transition-colors">Retour à la boutique</Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

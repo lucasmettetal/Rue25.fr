@@ -1,0 +1,40 @@
+// Déploiement du front sur Cloudflare Workers (Static Assets).
+//
+// Jusqu'ici le Worker était mis à jour à la main depuis le tableau de bord :
+// merger sur `main` ne mettait donc rien en ligne. Cette configuration permet
+// à `wrangler deploy` — et donc à la CI — de le faire à notre place.
+//
+// ⚠️ `name` doit être EXACTEMENT celui du Worker existant, sinon le déploiement
+//    en crée un second et les domaines rue25.fr / www.rue25.fr restent branchés
+//    sur l'ancien. Il se lit dans l'URL rue25.lucas-mettetal2.workers.dev
+//    → le Worker s'appelle « rue25 ». Confirmé par la configuration qu'avait
+//    générée Cloudflare elle-même sur la branche `cloudflare/workers-autoconfig`
+//    (jamais fusionnée : elle part d'un commit antérieur au durcissement de
+//    sécurité et annulerait ces correctifs).
+//
+// Les domaines personnalisés restent gérés dans le tableau de bord Cloudflare :
+// ce fichier ne déclare aucune route, donc `wrangler deploy` n'y touche pas.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rue25",
+  "compatibility_date": "2026-08-21",
+
+  "assets": {
+    "directory": "./dist",
+
+    // Application monopage : toute URL sans fichier correspondant renvoie
+    // index.html, et c'est React Router qui décide de la page.
+    "not_found_handling": "single-page-application",
+
+    // Par défaut Cloudflare redirige /produit/ma-piece vers /produit/ma-piece/
+    // (307) dès qu'un dossier index.html existe. Nos URL canoniques, nos liens
+    // internes et le sitemap sont tous SANS barre finale : on garde donc la
+    // forme sans barre, servie directement en 200.
+    "html_handling": "drop-trailing-slash"
+  },
+
+  // Journaux du Worker consultables dans le tableau de bord (gratuit).
+  "observability": {
+    "enabled": true
+  }
+}

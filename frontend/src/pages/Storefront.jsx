@@ -3,13 +3,34 @@ import { Link } from 'react-router-dom';
 import { getProducts } from '../lib/api.js';
 import { useCart } from '../hooks/useCart.jsx';
 import { useCustomerAuth } from '../hooks/useCustomerAuth.jsx';
-import ProductModal from '../components/ProductModal.jsx';
+import ProductImage from '../components/ProductImage.jsx';
 import CartDrawer from '../components/CartDrawer.jsx';
+import Seo, { SITE_URL, SITE_NAME } from '../components/Seo.jsx';
 
 const IMG_HERO    = '/images/hero.jpg';
 const IMG_ATELIER = '/images/atelier.jpg';
 
 const CATEGORIES = ['Tous', 'Chemises', 'Robes', 'Vestes', 'Pantalons', 'Pulls', 'Jupes'];
+
+// Style commun des liens de navigation (en-tête desktop et menu mobile).
+const NAV_LINK = 'text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors';
+
+const FOOTER_LINK = 'block text-xs text-white/55 mb-2.5 hover:text-white transition-colors';
+
+// Chaque lien pointe vers une destination qui existe réellement : une ancre de
+// cette page (#) ou une route de l'application.
+const FOOTER_COLUMNS = [
+  ['BOUTIQUE', [
+    ['Collections', '#catalogue'],
+    ['Sur mesure', '/sur-mesure'],
+    ['Mon compte', '/mon-compte'],
+  ]],
+  ['INFOS', [
+    ['Notre atelier', '#atelier'],
+    ['Contact', '/contact'],
+    ['Mentions légales', '/mentions-legales'],
+  ]],
+];
 
 const BANNER_ITEMS = [
   '✦  Livraison offerte dès 150 €',
@@ -18,12 +39,23 @@ const BANNER_ITEMS = [
   '✦  Retours gratuits sous 30 jours',
 ];
 
+// Données structurées de l'accueil : elles identifient l'éditeur du site
+// auprès des moteurs de recherche.
+const HOME_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.svg`,
+  description: "Atelier de vêtements artisanaux confectionnés à la main.",
+  email: 'contact@rue25.fr',
+};
+
 export default function Storefront() {
   const [products, setProducts]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [category, setCategory]   = useState('Tous');
   const [search, setSearch]       = useState('');
-  const [selected, setSelected]   = useState(null);
   const [cartOpen, setCartOpen]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const { count }  = useCart();
@@ -48,6 +80,15 @@ export default function Storefront() {
     return () => clearTimeout(t);
   }, [fetchProducts, search]);
 
+  // React Router ne fait pas défiler vers une ancre lors d'une navigation
+  // interne : on s'en charge à l'arrivée sur la page (retour /#catalogue).
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView(), 100);
+    return () => clearTimeout(t);
+  }, []);
+
   // Ferme le menu mobile si on redimensionne vers desktop
   useEffect(() => {
     const onResize = () => { if (window.innerWidth >= 768) setMenuOpen(false); };
@@ -57,6 +98,10 @@ export default function Storefront() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        description="Rue 25 — vêtements artisanaux confectionnés à la main en France. Lin, coton bio, laine : des pièces uniques et un service sur mesure."
+        path="/"
+        jsonLd={HOME_JSONLD} />
 
       {/* Banner */}
       <div className="bg-dark text-white overflow-hidden h-9 flex items-center">
@@ -77,15 +122,10 @@ export default function Storefront() {
 
           {/* Nav desktop */}
           <nav className="hidden md:flex gap-8">
-            {['Boutique', 'Notre Histoire', 'Contact'].map(n => (
-              <a key={n} href="#" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">{n}</a>
-            ))}
-            <Link to="/sur-mesure" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
-              Sur Mesure
-            </Link>
-            <Link to="/contact" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
-              Contact
-            </Link>
+            <a href="#catalogue" className={NAV_LINK}>Boutique</a>
+            <a href="#atelier" className={NAV_LINK}>Notre Histoire</a>
+            <Link to="/sur-mesure" className={NAV_LINK}>Sur Mesure</Link>
+            <Link to="/contact" className={NAV_LINK}>Contact</Link>
           </nav>
 
           <div className="flex items-center gap-2 md:gap-4">
@@ -130,18 +170,12 @@ export default function Storefront() {
         {/* Menu mobile déroulant */}
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-stone px-6 py-5 flex flex-col gap-4">
-            {['Boutique', 'Notre Histoire', 'Contact'].map(n => (
-              <a key={n} href="#" onClick={() => setMenuOpen(false)}
-                className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
-                {n}
-              </a>
-            ))}
-            <Link to="/sur-mesure" onClick={() => setMenuOpen(false)}
-              className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
+            <a href="#catalogue" onClick={() => setMenuOpen(false)} className={NAV_LINK}>Boutique</a>
+            <a href="#atelier" onClick={() => setMenuOpen(false)} className={NAV_LINK}>Notre Histoire</a>
+            <Link to="/sur-mesure" onClick={() => setMenuOpen(false)} className={NAV_LINK}>
               Sur Mesure
             </Link>
-            <Link to="/contact" onClick={() => setMenuOpen(false)}
-              className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">
+            <Link to="/contact" onClick={() => setMenuOpen(false)} className={NAV_LINK}>
               Contact
             </Link>
             <Link to="/admin" onClick={() => setMenuOpen(false)}
@@ -152,12 +186,20 @@ export default function Storefront() {
         )}
       </header>
 
+      {/* <main> délimite le contenu principal : c'est le repère qu'utilisent
+          les lecteurs d'écran (« aller au contenu ») et les moteurs. */}
+      <main>
       {/* Hero */}
       <section className="relative h-[78vh] overflow-hidden flex items-end">
+        {/* Image du hero : c'est le plus gros élément affiché d'entrée (LCP).
+            On la charge en priorité — surtout pas en lazy. */}
         <img
           src={IMG_HERO}
-          alt="Atelier couture fait main"
+          alt="Détail d'une pièce brodée à la main dans l'atelier Rue 25"
           className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[rgba(26,24,21,0.82)] via-[rgba(26,24,21,0.18)] to-transparent" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-10 pb-10 md:pb-16 w-full fade-up">
@@ -176,7 +218,7 @@ export default function Storefront() {
       </section>
 
       {/* Catalogue */}
-      <section id="catalogue" className="max-w-7xl mx-auto px-4 md:px-10 py-16">
+      <section id="catalogue" className="max-w-7xl mx-auto px-4 md:px-10 py-16 scroll-mt-[68px]">
         <div className="flex flex-col gap-4 mb-10">
           {/* Filtres catégories */}
           <div className="flex flex-wrap gap-2">
@@ -219,16 +261,19 @@ export default function Storefront() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-10">
-            {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onSelect={setSelected} />)}
+            {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
           </div>
         )}
       </section>
 
-      {/* About */}
-      <section className="bg-white border-y border-stone">
+      {/* About — cible du lien « Notre Histoire » */}
+      <section id="atelier" className="bg-white border-y border-stone scroll-mt-[68px]">
         <div className="max-w-7xl mx-auto px-4 md:px-10 py-16 md:py-20 grid md:grid-cols-2 gap-10 md:gap-20 items-center">
           <div className="aspect-[4/5] overflow-hidden">
-            <img src={IMG_ATELIER} alt="Atelier couture" className="w-full h-full object-cover" />
+            {/* Section située loin sous la ligne de flottaison : chargement différé
+                pour ne pas peser sur l'affichage initial (~487 Ko économisés). */}
+            <img src={IMG_ATELIER} alt="Vue de l'atelier de couture Rue 25"
+              className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
           <div>
             <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Notre atelier</p>
@@ -250,6 +295,7 @@ export default function Storefront() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="bg-dark text-white px-4 md:px-10 pt-16 pb-8">
@@ -262,18 +308,28 @@ export default function Storefront() {
               </div>
               <p className="text-xs text-white/45 leading-relaxed max-w-[200px]">Vêtements artisanaux façonnés avec passion et authenticité.</p>
             </div>
-            {[['BOUTIQUE', ['Collections', 'Nouveautés', 'Sur mesure']], ['INFOS', ['À propos', 'Livraison', 'Retours']]].map(([title, links]) => (
+            {FOOTER_COLUMNS.map(([title, links]) => (
               <div key={title}>
                 <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">{title}</p>
-                {links.map(l => <a key={l} href="#" className="block text-xs text-white/55 mb-2.5 hover:text-white transition-colors">{l}</a>)}
+                {links.map(([label, to]) => (
+                  to.startsWith('#')
+                    ? <a key={label} href={to} className={FOOTER_LINK}>{label}</a>
+                    : <Link key={label} to={to} className={FOOTER_LINK}>{label}</Link>
+                ))}
               </div>
             ))}
+            {/* Le champ newsletter d'origine n'était relié à rien : collecter une
+                adresse sans traitement derrière est trompeur (et non conforme au
+                RGPD). On oriente vers le formulaire de contact, qui fonctionne. */}
             <div className="col-span-2 md:col-span-1">
-              <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">NEWSLETTER</p>
-              <div className="flex">
-                <input placeholder="votre@email.fr" className="flex-1 bg-white/10 border border-white/15 text-white text-xs border-r-0" />
-                <button className="bg-accent px-4 text-white text-base flex-shrink-0">→</button>
-              </div>
+              <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">NOUS ÉCRIRE</p>
+              <p className="text-xs text-white/45 leading-relaxed mb-4">
+                Une question sur une pièce ou un projet sur mesure ? Nous répondons sous 48 h.
+              </p>
+              <Link to="/contact"
+                className="inline-block text-[11px] tracking-widest uppercase border border-white/20 text-white/70 px-5 py-2.5 hover:border-white/50 hover:text-white transition-colors">
+                Nous contacter →
+              </Link>
             </div>
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/30">
@@ -287,21 +343,22 @@ export default function Storefront() {
         </div>
       </footer>
 
-      {selected && <ProductModal product={selected} onClose={() => setSelected(null)} />}
       {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
     </div>
   );
 }
 
-function ProductCard({ product, index, onSelect }) {
+// La carte est un vrai lien vers /produit/:slug : c'est ce qui rend le
+// catalogue explorable par Google et chaque pièce partageable.
+function ProductCard({ product, index }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <div className="fade-up cursor-pointer" style={{ animationDelay: `${index * 55}ms` }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      onClick={() => onSelect(product)}>
+    <Link to={`/produit/${product.slug}`}
+      className="fade-up block" style={{ animationDelay: `${index * 55}ms` }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="relative aspect-[3/4] overflow-hidden bg-stone mb-3 md:mb-4">
-        <img src={product.image_url} alt={product.name}
-          className={`w-full h-full object-cover transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`} />
+        <ProductImage src={product.image_url} alt={product.name}
+          className={`w-full h-full transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`} />
         {!product.in_stock && (
           <div className="absolute inset-0 bg-cream/75 backdrop-blur-sm flex items-center justify-center">
             <span className="text-[10px] tracking-[0.25em] uppercase border border-stone px-5 py-2 text-muted">Épuisé</span>
@@ -318,6 +375,6 @@ function ProductCard({ product, index, onSelect }) {
         <span className="text-xs md:text-sm text-muted flex-shrink-0">{Number(product.price).toFixed(2)} €</span>
       </div>
       <div className="text-xs text-muted mt-1">{product.category}</div>
-    </div>
+    </Link>
   );
 }

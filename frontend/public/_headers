@@ -1,0 +1,24 @@
+# En-têtes HTTP servis par Cloudflare (Workers Assets / Pages).
+# Format : un motif d'URL, puis les en-têtes indentés en dessous.
+
+# Fichiers générés par Vite : leur nom contient un hash (index-a1b2c3.js).
+# Un changement de contenu = un nouveau nom, donc on peut les cacher un an
+# sans risque de servir une version périmée.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images et favicon : noms stables, donc cache plus court (7 jours)
+# pour pouvoir les remplacer sans attendre un an.
+/images/*
+  Cache-Control: public, max-age=604800
+/favicon.svg
+  Cache-Control: public, max-age=604800
+
+# En-têtes de sécurité appliqués à tout le site.
+# (Volontairement sans Content-Security-Policy : à ajouter séparément,
+#  après test, car une CSP mal réglée casse la page.)
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()

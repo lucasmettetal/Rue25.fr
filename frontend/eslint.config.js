@@ -32,4 +32,18 @@ export default [
       'no-console': 'off',
     },
   },
+  {
+    // Scripts de compilation : ils tournent sous Node, pas dans le navigateur.
+    files: ['scripts/**/*.{js,mjs}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ];
