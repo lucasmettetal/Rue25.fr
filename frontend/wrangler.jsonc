@@ -7,7 +7,10 @@
 // ⚠️ `name` doit être EXACTEMENT celui du Worker existant, sinon le déploiement
 //    en crée un second et les domaines rue25.fr / www.rue25.fr restent branchés
 //    sur l'ancien. Il se lit dans l'URL rue25.lucas-mettetal2.workers.dev
-//    → le Worker s'appelle « rue25 ».
+//    → le Worker s'appelle « rue25 ». Confirmé par la configuration qu'avait
+//    générée Cloudflare elle-même sur la branche `cloudflare/workers-autoconfig`
+//    (jamais fusionnée : elle part d'un commit antérieur au durcissement de
+//    sécurité et annulerait ces correctifs).
 //
 // Les domaines personnalisés restent gérés dans le tableau de bord Cloudflare :
 // ce fichier ne déclare aucune route, donc `wrangler deploy` n'y touche pas.
@@ -28,5 +31,10 @@
     // internes et le sitemap sont tous SANS barre finale : on garde donc la
     // forme sans barre, servie directement en 200.
     "html_handling": "drop-trailing-slash"
+  },
+
+  // Journaux du Worker consultables dans le tableau de bord (gratuit).
+  "observability": {
+    "enabled": true
   }
 }

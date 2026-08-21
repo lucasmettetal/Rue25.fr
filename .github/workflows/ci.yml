@@ -101,10 +101,20 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Tant que les deux secrets ne sont pas posés sur le dépôt, on saute le
+      # déploiement au lieu de faire échouer la CI : le reste du pipeline garde
+      # son sens, et le message ci-dessous dit quoi faire.
       - name: Deploy
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: frontend
           command: deploy
+
+      - name: Secrets Cloudflare manquants
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' || secrets.CLOUDFLARE_ACCOUNT_ID == '' }}
+        run: |
+          echo "::warning title=Déploiement sauté::CLOUDFLARE_API_TOKEN et/ou CLOUDFLARE_ACCOUNT_ID ne sont pas définis."
+          echo "À créer dans Settings > Secrets and variables > Actions. Voir la section Déploiement du README."
