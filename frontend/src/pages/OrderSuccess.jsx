@@ -21,7 +21,7 @@ export default function OrderSuccess() {
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
       <Link to="/" className="flex items-baseline gap-2 mb-12">
         <span className="font-serif text-[26px]">Rue</span>
-        <span className="font-serif text-[30px] italic text-accent">25</span>
+        <span className="font-serif text-[30px] italic text-accent-ink">25</span>
       </Link>
 
       {error ? (

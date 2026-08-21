@@ -168,7 +168,7 @@ export default function CartDrawer({ onClose }) {
 
             <div className="px-7 py-5 border-t border-stone flex-shrink-0 flex flex-col gap-2">
               <button onClick={handleStripePayment} disabled={loading || !formValid}
-                className="w-full bg-accent text-white text-xs tracking-widest uppercase py-3 disabled:opacity-40">
+                className="w-full bg-accent-ink text-white text-xs tracking-widest uppercase py-3 disabled:opacity-40">
                 {loading ? '…' : '💳 Payer par carte'}
               </button>
               <button onClick={handleDirectOrder} disabled={loading || !formValid}

@@ -68,7 +68,7 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
           <Link to="/" className="flex items-baseline gap-2">
             <span className="font-serif text-[26px] font-normal tracking-[0.08em]">Rue</span>
-            <span className="font-serif text-[30px] italic text-accent">25</span>
+            <span className="font-serif text-[30px] italic text-accent-ink">25</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/#catalogue" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
@@ -80,7 +80,7 @@ export default function ProductPage() {
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
-              {count > 0 && <span className="text-[11px] bg-accent text-white rounded-full w-[18px] h-[18px] flex items-center justify-center">{count}</span>}
+              {count > 0 && <span className="text-[11px] bg-accent-ink text-white rounded-full w-[18px] h-[18px] flex items-center justify-center">{count}</span>}
             </button>
           </div>
         </div>

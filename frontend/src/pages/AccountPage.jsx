@@ -30,7 +30,7 @@ export default function AccountPage() {
         <div className="max-w-4xl mx-auto px-10 flex items-center justify-between h-[68px]">
           <Link to="/" className="flex items-baseline gap-2">
             <span className="font-serif text-[26px]">Rue</span>
-            <span className="font-serif text-[30px] italic text-accent">25</span>
+            <span className="font-serif text-[30px] italic text-accent-ink">25</span>
           </Link>
           <div className="flex items-center gap-5">
             <span className="text-sm text-muted">{user?.firstName || user?.email}</span>

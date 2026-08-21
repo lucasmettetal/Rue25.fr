@@ -103,7 +103,7 @@ export default function Storefront() {
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
           <div className="flex items-baseline gap-2">
             <span className="font-serif text-[26px] font-normal tracking-[0.08em]">Rue</span>
-            <span className="font-serif text-[30px] italic text-accent">25</span>
+            <span className="font-serif text-[30px] italic text-accent-ink">25</span>
           </div>
 
           {/* Nav desktop */}
@@ -122,7 +122,7 @@ export default function Storefront() {
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 01-8 0"/>
               </svg>
-              {count > 0 && <span className="text-[11px] bg-accent text-white rounded-full w-[18px] h-[18px] flex items-center justify-center">{count}</span>}
+              {count > 0 && <span className="text-[11px] bg-accent-ink text-white rounded-full w-[18px] h-[18px] flex items-center justify-center">{count}</span>}
             </button>
 
             {/* Connexion / Mon compte */}
@@ -187,9 +187,15 @@ export default function Storefront() {
           fetchPriority="high"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(26,24,21,0.82)] via-[rgba(26,24,21,0.18)] to-transparent" />
+        {/* Voile de lecture. Il ne suffit pas de choisir des couleurs contrastées :
+            le texte du hero est posé sur une photo, et la photo change. Le voile
+            garantit la lisibilité même sur un visuel très clair — l'ancien s'éteignait
+            trop vite et le surtitre disparaissait sur les tissus blancs. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(25,28,31,0.88)] via-[rgba(25,28,31,0.46)] to-[rgba(25,28,31,0.12)]" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-10 pb-10 md:pb-16 w-full fade-up">
-          <p className="text-[11px] tracking-[0.35em] uppercase text-accent mb-4">Collection Printemps — Été 2026</p>
+          {/* Sur une photo, le texte reste monochrome clair : une couleur d'accent
+              dépend du visuel qui passe derrière, et le visuel change. */}
+          <p className="text-[11px] tracking-[0.35em] uppercase text-white/85 mb-4">Collection Printemps — Été 2026</p>
           <h1 className="font-serif text-[38px] md:text-[68px] text-white leading-[1.08] max-w-xl mb-6 font-normal">
             Vêtements<br /><em>faits à la main</em>
           </h1>

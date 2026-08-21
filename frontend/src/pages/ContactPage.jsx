@@ -43,7 +43,7 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
           <Link to="/" className="flex items-baseline gap-2">
             <span className="font-serif text-[26px] font-normal tracking-[0.08em]">Rue</span>
-            <span className="font-serif text-[30px] italic text-accent">25</span>
+            <span className="font-serif text-[30px] italic text-accent-ink">25</span>
           </Link>
           <nav className="hidden md:flex gap-8">
             <Link to="/" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">Boutique</Link>

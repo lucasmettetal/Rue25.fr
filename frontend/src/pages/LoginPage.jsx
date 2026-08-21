@@ -31,7 +31,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-baseline gap-2">
             <span className="font-serif text-[26px]">Rue</span>
-            <span className="font-serif text-[30px] italic text-accent">25</span>
+            <span className="font-serif text-[30px] italic text-accent-ink">25</span>
           </Link>
           <p className="text-[10px] tracking-[0.3em] uppercase text-muted mt-1">Mon Compte</p>
         </div>

@@ -33,7 +33,7 @@ export default function CookieBanner() {
             Essentiels uniquement
           </button>
           <button onClick={accept}
-            className="text-[11px] tracking-widest uppercase bg-accent text-white px-5 py-2 hover:bg-accent/90 transition-colors">
+            className="text-[11px] tracking-widest uppercase bg-accent-ink text-white px-5 py-2 hover:bg-accent/90 transition-colors">
             Accepter
           </button>
         </div>

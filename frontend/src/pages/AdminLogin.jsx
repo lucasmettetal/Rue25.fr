@@ -29,7 +29,7 @@ export default function AdminLogin() {
       <div className="fade-up w-[380px] text-center">
         <div className="flex items-baseline gap-2 justify-center mb-1.5">
           <span className="font-serif text-2xl">Rue</span>
-          <span className="font-serif text-[28px] italic text-accent">25</span>
+          <span className="font-serif text-[28px] italic text-accent-ink">25</span>
         </div>
         <p className="text-[10px] tracking-[0.3em] text-muted uppercase mb-12">Espace Administration</p>
 

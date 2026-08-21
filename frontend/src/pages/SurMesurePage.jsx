@@ -56,7 +56,7 @@ export default function SurMesurePage() {
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
           <Link to="/" className="flex items-baseline gap-2">
             <span className="font-serif text-[26px] font-normal tracking-[0.08em]">Rue</span>
-            <span className="font-serif text-[30px] italic text-accent">25</span>
+            <span className="font-serif text-[30px] italic text-accent-ink">25</span>
           </Link>
           <Link to="/" className="text-[11px] tracking-[0.15em] uppercase text-muted hover:text-dark transition-colors">
             ← Boutique

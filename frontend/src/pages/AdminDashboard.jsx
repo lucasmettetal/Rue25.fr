@@ -710,7 +710,7 @@ function ProductForm({ product, onClose, onSave }) {
 
         <div className="px-8 pb-7 flex gap-3 justify-end">
           <button onClick={onClose} className="border border-line text-muted text-xs uppercase tracking-widest px-6 py-2.5 hover:border-dark">Annuler</button>
-          <button onClick={save} disabled={loading} className="bg-accent text-white text-xs uppercase tracking-widest px-6 py-2.5 disabled:opacity-50">
+          <button onClick={save} disabled={loading} className="bg-accent-ink text-white text-xs uppercase tracking-widest px-6 py-2.5 disabled:opacity-50">
             {loading ? '…' : product ? 'Enregistrer' : 'Créer le produit'}
           </button>
         </div>
