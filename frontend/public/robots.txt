@@ -1,0 +1,13 @@
+# Le site public est entièrement indexable.
+User-agent: *
+Allow: /
+
+# Espaces privés ou sans intérêt pour la recherche : on évite qu'ils
+# remontent dans les résultats.
+Disallow: /admin
+Disallow: /mon-compte
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /commande/
+
+Sitemap: https://rue25.fr/sitemap.xml

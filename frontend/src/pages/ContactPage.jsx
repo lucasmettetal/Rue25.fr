@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { sendContact } from '../lib/api.js';
+import Seo from '../components/Seo.jsx';
 
 const INFOS = [
   { icon: '◈', label: 'Adresse', lines: ['25 rue des Artisans', '82000 Montauban'] },
@@ -31,6 +32,11 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Contact"
+        description="Une question sur une pièce ou un projet sur mesure ? Écrivez à l'atelier Rue 25, nous répondons sous 48 heures."
+        path="/contact" />
+
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-stone">
@@ -50,7 +56,7 @@ export default function ContactPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-10 py-16 md:py-20 grid md:grid-cols-2 gap-16 md:gap-24">
+      <main className="max-w-7xl mx-auto px-4 md:px-10 py-16 md:py-20 grid md:grid-cols-2 gap-16 md:gap-24">
 
         {/* Infos */}
         <div className="fade-up">
@@ -131,7 +137,7 @@ export default function ContactPage() {
             </form>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Footer minimal */}
       <footer className="bg-dark text-white px-4 md:px-10 py-8 border-t border-white/10">

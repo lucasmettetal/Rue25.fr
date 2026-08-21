@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { getProducts } from '../lib/api.js';
 import { useCart } from '../hooks/useCart.jsx';
 import { useCustomerAuth } from '../hooks/useCustomerAuth.jsx';
-import ProductModal from '../components/ProductModal.jsx';
 import ProductImage from '../components/ProductImage.jsx';
 import CartDrawer from '../components/CartDrawer.jsx';
+import Seo, { SITE_URL, SITE_NAME } from '../components/Seo.jsx';
 
 const IMG_HERO    = '/images/hero.jpg';
 const IMG_ATELIER = '/images/atelier.jpg';
@@ -39,12 +39,23 @@ const BANNER_ITEMS = [
   '✦  Retours gratuits sous 30 jours',
 ];
 
+// Données structurées de l'accueil : elles identifient l'éditeur du site
+// auprès des moteurs de recherche.
+const HOME_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.svg`,
+  description: "Atelier de vêtements artisanaux confectionnés à la main.",
+  email: 'contact@rue25.fr',
+};
+
 export default function Storefront() {
   const [products, setProducts]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [category, setCategory]   = useState('Tous');
   const [search, setSearch]       = useState('');
-  const [selected, setSelected]   = useState(null);
   const [cartOpen, setCartOpen]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const { count }  = useCart();
@@ -69,6 +80,15 @@ export default function Storefront() {
     return () => clearTimeout(t);
   }, [fetchProducts, search]);
 
+  // React Router ne fait pas défiler vers une ancre lors d'une navigation
+  // interne : on s'en charge à l'arrivée sur la page (retour /#catalogue).
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView(), 100);
+    return () => clearTimeout(t);
+  }, []);
+
   // Ferme le menu mobile si on redimensionne vers desktop
   useEffect(() => {
     const onResize = () => { if (window.innerWidth >= 768) setMenuOpen(false); };
@@ -78,6 +98,10 @@ export default function Storefront() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        description="Rue 25 — vêtements artisanaux confectionnés à la main en France. Lin, coton bio, laine : des pièces uniques et un service sur mesure."
+        path="/"
+        jsonLd={HOME_JSONLD} />
 
       {/* Banner */}
       <div className="bg-dark text-white overflow-hidden h-9 flex items-center">
@@ -162,6 +186,9 @@ export default function Storefront() {
         )}
       </header>
 
+      {/* <main> délimite le contenu principal : c'est le repère qu'utilisent
+          les lecteurs d'écran (« aller au contenu ») et les moteurs. */}
+      <main>
       {/* Hero */}
       <section className="relative h-[78vh] overflow-hidden flex items-end">
         {/* Image du hero : c'est le plus gros élément affiché d'entrée (LCP).
@@ -234,7 +261,7 @@ export default function Storefront() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-10">
-            {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} onSelect={setSelected} />)}
+            {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
           </div>
         )}
       </section>
@@ -268,6 +295,7 @@ export default function Storefront() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="bg-dark text-white px-4 md:px-10 pt-16 pb-8">
@@ -315,18 +343,19 @@ export default function Storefront() {
         </div>
       </footer>
 
-      {selected && <ProductModal product={selected} onClose={() => setSelected(null)} />}
       {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
     </div>
   );
 }
 
-function ProductCard({ product, index, onSelect }) {
+// La carte est un vrai lien vers /produit/:slug : c'est ce qui rend le
+// catalogue explorable par Google et chaque pièce partageable.
+function ProductCard({ product, index }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <div className="fade-up cursor-pointer" style={{ animationDelay: `${index * 55}ms` }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      onClick={() => onSelect(product)}>
+    <Link to={`/produit/${product.slug}`}
+      className="fade-up block" style={{ animationDelay: `${index * 55}ms` }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <div className="relative aspect-[3/4] overflow-hidden bg-stone mb-3 md:mb-4">
         <ProductImage src={product.image_url} alt={product.name}
           className={`w-full h-full transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`} />
@@ -346,6 +375,6 @@ function ProductCard({ product, index, onSelect }) {
         <span className="text-xs md:text-sm text-muted flex-shrink-0">{Number(product.price).toFixed(2)} €</span>
       </div>
       <div className="text-xs text-muted mt-1">{product.category}</div>
-    </div>
+    </Link>
   );
 }

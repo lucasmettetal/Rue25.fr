@@ -120,7 +120,7 @@ stripe listen --forward-to localhost:3001/api/stripe/webhook
 |---------|---------------------------|-------|-------------|
 | GET     | /api/products             | —     | Liste (filtres : `category`, `search`) |
 | GET     | /api/products/categories  | —     | Liste des catégories |
-| GET     | /api/products/:id         | —     | Détail produit |
+| GET     | /api/products/:idOrSlug   | —     | Détail produit (identifiant **ou** slug) |
 | POST    | /api/products             | Admin | Créer un produit |
 | PUT     | /api/products/:id         | Admin | Modifier un produit |
 | DELETE  | /api/products/:id         | Admin | Supprimer un produit |
@@ -178,6 +178,11 @@ Stage 4 - MVP/
 └── frontend/
     ├── Dockerfile             # Build Vite → nginx
     ├── nginx.conf             # SPA + proxy /api → backend
+    ├── public/
+    │   ├── _headers           # Cache et en-têtes de sécurité (Cloudflare)
+    │   └── robots.txt
+    ├── scripts/
+    │   └── generate-seo.mjs   # sitemap.xml + aperçus de partage (post-build)
     └── src/
         ├── lib/api.js         # Tous les appels HTTP
         ├── hooks/
@@ -191,9 +196,41 @@ Stage 4 - MVP/
         │   ├── RegisterPage.jsx
         │   ├── AccountPage.jsx
         │   ├── OrderSuccess.jsx
+        │   ├── ProductPage.jsx      # Fiche produit /produit/:slug
+        │   ├── ContactPage.jsx
+        │   ├── LegalPage.jsx        # Mentions légales
+        │   ├── PrivacyPage.jsx      # Politique de confidentialité
         │   ├── AdminLogin.jsx
         │   └── AdminDashboard.jsx
         └── components/
-            ├── ProductModal.jsx
+            ├── ProductImage.jsx    # Image produit + repli « Photo à venir »
+            ├── Seo.jsx             # Titre / description / Open Graph / données structurées
+            ├── CookieBanner.jsx
             └── CartDrawer.jsx
 ```
+
+---
+
+## Référencement (SEO)
+
+Chaque pièce a son adresse propre : `/produit/:slug`. Le composant `Seo`
+renseigne titre, description, URL canonique, Open Graph et données structurées
+`schema.org/Product` — c'est ce qui permet à Google d'afficher le prix et la
+disponibilité sous le résultat.
+
+Une application monopage a toutefois une limite : les robots des réseaux
+sociaux n'exécutent pas le JavaScript. `npm run build` lance donc, après Vite,
+le script `frontend/scripts/generate-seo.mjs` qui écrit :
+
+- `dist/sitemap.xml` — pages fixes + une entrée par produit ;
+- `dist/<route>/index.html` — une copie de l'index avec les balises déjà
+  écrites en dur, pour que le partage d'un lien affiche le bon aperçu.
+
+Le script interroge l'API pour récupérer les produits (`SEO_API_URL` ou
+`VITE_API_URL`, sinon l'API de production). Si elle est injoignable, le build
+continue avec les seules pages fixes.
+
+> Les fiches produits sont figées à la compilation : après avoir ajouté ou
+> modifié un produit dans l'admin, redéployez le front pour rafraîchir le
+> sitemap et les aperçus de partage. Le contenu affiché aux visiteurs, lui,
+> vient toujours de l'API en direct.

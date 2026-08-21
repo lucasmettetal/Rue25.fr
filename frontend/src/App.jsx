@@ -1,9 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider }         from './hooks/useAuth.jsx';
 import { CustomerAuthProvider } from './hooks/useCustomerAuth.jsx';
 import { CartProvider }         from './hooks/useCart.jsx';
 
 import Storefront      from './pages/Storefront.jsx';
+import ProductPage     from './pages/ProductPage.jsx';
 import AdminLogin      from './pages/AdminLogin.jsx';
 import AdminDashboard  from './pages/AdminDashboard.jsx';
 import LoginPage       from './pages/LoginPage.jsx';
@@ -24,8 +26,10 @@ export default function App() {
       <CustomerAuthProvider>
         <CartProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               <Route path="/"                     element={<Storefront />} />
+              <Route path="/produit/:slug"         element={<ProductPage />} />
               <Route path="/connexion"             element={<LoginPage />} />
               <Route path="/inscription"           element={<RegisterPage />} />
               <Route path="/mon-compte"            element={<AccountPage />} />
@@ -44,4 +48,15 @@ export default function App() {
       </CustomerAuthProvider>
     </AuthProvider>
   );
+}
+
+// Sans cela, ouvrir une fiche produit depuis le bas du catalogue afficherait la
+// nouvelle page à la même hauteur de défilement. Une ancre (#catalogue) reste
+// prioritaire : c'est la page ciblée qui gère son propre défilement.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) window.scrollTo(0, 0);
+  }, [pathname, hash]);
+  return null;
 }

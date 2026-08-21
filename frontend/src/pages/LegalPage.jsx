@@ -1,8 +1,14 @@
 import { Link } from 'react-router-dom';
+import Seo from '../components/Seo.jsx';
 
 export default function LegalPage() {
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Mentions légales"
+        description="Mentions légales du site rue25.fr : éditeur, directeur de publication, hébergeur et conditions d'utilisation."
+        path="/mentions-legales" />
+
       <header className="sticky top-0 z-40 bg-white border-b border-stone">
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
           <Link to="/" className="flex items-baseline gap-2">
@@ -15,7 +21,7 @@ export default function LegalPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 md:px-10 py-16 fade-up">
+      <main className="max-w-3xl mx-auto px-4 md:px-10 py-16 fade-up">
         <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Juridique</p>
         <h1 className="font-serif text-4xl font-normal mb-12">Mentions légales</h1>
 
@@ -87,7 +93,7 @@ export default function LegalPage() {
           <Link to="/politique-de-confidentialite" className="hover:text-dark transition-colors">Politique de confidentialité</Link>
           <Link to="/" className="hover:text-dark transition-colors">Retour à la boutique</Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

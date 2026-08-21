@@ -91,10 +91,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+// Accepte l'identifiant numérique (utilisé par l'admin) ou le slug (utilisé par
+// les URL publiques /produit/:slug, indexables et partageables).
+router.get('/:idOrSlug', async (req, res) => {
+  const { idOrSlug } = req.params;
+  const where = /^\d+$/.test(idOrSlug) ? { id: Number(idOrSlug) } : { slug: idOrSlug };
   try {
     const product = await prisma.product.findUnique({
-      where: { id: Number(req.params.id) },
+      where,
       include: { category: true },
     });
     if (!product) return res.status(404).json({ error: 'Produit introuvable' });
