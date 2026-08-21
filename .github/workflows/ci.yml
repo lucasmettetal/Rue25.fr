@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# Le front (Cloudflare) et l'API (Railway) sont sur deux domaines distincts :
+# l'URL de l'API doit être compilée dans le bundle. Ce n'est pas un secret.
+# Surchargeable sans toucher au code par une variable de dépôt VITE_API_URL
+# (Settings → Secrets and variables → Actions → Variables).
+env:
+  VITE_API_URL: ${{ vars.VITE_API_URL || 'https://rue25fr-production.up.railway.app/api' }}
+
 jobs:
   backend:
     name: Backend — lint & tests
@@ -60,3 +67,44 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Le Worker était jusqu'ici mis à jour à la main : merger sur `main` ne mettait
+  # rien en ligne. Ce job s'en charge, et seulement si le lint et les tests
+  # passent — on ne déploie jamais une version cassée.
+  deploy-frontend:
+    name: Frontend — déploiement Cloudflare
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-frontend
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Reconstruit ici plutôt que de transporter le dossier dist entre deux jobs :
+      # `npm run build` interroge l'API pour générer le sitemap et les aperçus de
+      # partage, autant qu'ils reflètent le catalogue au moment du déploiement.
+      - name: Build
+        run: npm run build
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: frontend
+          command: deploy

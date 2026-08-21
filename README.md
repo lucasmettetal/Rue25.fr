@@ -179,8 +179,9 @@ Stage 4 - MVP/
 │       ├── stripe.js          # Checkout + webhook signé
 │       └── customOrders.js
 └── frontend/
-    ├── Dockerfile             # Build Vite → nginx
+    ├── Dockerfile             # Build Vite → nginx (développement Docker)
     ├── nginx.conf             # SPA + proxy /api → backend
+    ├── wrangler.jsonc         # Déploiement Cloudflare Workers (production)
     ├── public/
     │   ├── _headers           # Cache et en-têtes de sécurité (Cloudflare)
     │   └── robots.txt
@@ -211,6 +212,53 @@ Stage 4 - MVP/
             ├── CookieBanner.jsx
             └── CartDrawer.jsx
 ```
+
+---
+
+## Déploiement
+
+| Partie | Hébergeur | Déclenchement |
+|--------|-----------|---------------|
+| API | Railway | automatique au push sur `main` |
+| Front | Cloudflare Workers (Static Assets) | job `deploy-frontend` de la CI, après le lint et les tests |
+
+Le front ne se déploie qu'une fois `backend` **et** `frontend` au vert : une
+version qui ne compile pas ne part jamais en production.
+
+### Mise en place (une seule fois)
+
+Deux secrets à créer dans **Settings → Secrets and variables → Actions** du
+dépôt GitHub :
+
+| Secret | Où le trouver |
+|--------|----------------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare → My Profile → API Tokens → Create Token → Custom → permission **Edit Cloudflare Workers** |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare → Workers & Pages → colonne de droite, **Account ID** |
+
+L'URL de l'API est publique, donc pas un secret : elle est écrite dans
+`.github/workflows/ci.yml` et surchargeable par une **variable** de dépôt
+`VITE_API_URL`.
+
+### Déployer à la main
+
+```bash
+cd frontend
+npx wrangler login
+npm run deploy        # build + wrangler deploy
+```
+
+### Points d'attention
+
+- `frontend/wrangler.jsonc` doit porter le **nom exact du Worker existant**
+  (`rue25`, lisible dans `rue25.lucas-mettetal2.workers.dev`). Un nom différent
+  créerait un second Worker, et rue25.fr resterait branché sur l'ancien.
+- Les **domaines personnalisés restent gérés dans le tableau de bord** : le
+  fichier ne déclare aucune route, `wrangler deploy` n'y touche donc pas.
+- `html_handling: "drop-trailing-slash"` : sans cela Cloudflare redirigerait
+  `/produit/ma-piece` vers `/produit/ma-piece/`, alors que les URL canoniques,
+  les liens internes et le sitemap sont tous sans barre finale.
+- Chaque déploiement reconstruit le sitemap et les aperçus de partage à partir
+  de l'API : ils reflètent donc le catalogue au moment du déploiement.
 
 ---
 
