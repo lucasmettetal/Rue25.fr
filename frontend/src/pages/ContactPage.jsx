@@ -50,7 +50,7 @@ export default function ContactPage() {
             <Link to="/contact" className="text-[12px] tracking-[0.12em] text-dark uppercase">Contact</Link>
             <Link to="/sur-mesure" className="text-[12px] tracking-[0.12em] text-muted uppercase hover:text-dark transition-colors">Sur Mesure</Link>
           </nav>
-          <Link to="/" className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+          <Link to="/" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
             ← Boutique
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default function ContactPage() {
 
         {/* Infos */}
         <div className="fade-up">
-          <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-6">Nous contacter</p>
+          <p className="text-[10px] tracking-[0.3em] text-accent-ink uppercase mb-6">Nous contacter</p>
           <h1 className="font-serif text-[42px] md:text-[52px] font-normal leading-[1.1] mb-8">
             Parlons de<br /><em>votre projet</em>
           </h1>
@@ -71,7 +71,7 @@ export default function ContactPage() {
           <div className="space-y-8">
             {INFOS.map(info => (
               <div key={info.label} className="flex gap-5">
-                <span className="text-accent text-lg mt-0.5 flex-shrink-0">{info.icon}</span>
+                <span className="text-accent-ink text-lg mt-0.5 flex-shrink-0">{info.icon}</span>
                 <div>
                   <p className="text-[10px] tracking-[0.2em] uppercase text-muted mb-1">{info.label}</p>
                   {info.lines.map(l => <p key={l} className="text-sm text-dark">{l}</p>)}
@@ -83,7 +83,7 @@ export default function ContactPage() {
           <div className="mt-12 pt-10 border-t border-stone">
             <p className="text-[10px] tracking-[0.2em] uppercase text-muted mb-4">Projet sur-mesure ?</p>
             <p className="text-sm text-muted mb-4">Pour un vêtement fait à vos mesures, utilisez notre formulaire dédié — il nous permet de préparer votre devis.</p>
-            <Link to="/sur-mesure" className="text-[12px] tracking-widest uppercase border border-stone px-6 py-2.5 text-muted hover:border-dark transition-colors inline-block">
+            <Link to="/sur-mesure" className="text-[12px] tracking-widest uppercase border border-line px-6 py-2.5 text-muted hover:border-dark transition-colors inline-block">
               Demande sur-mesure →
             </Link>
           </div>
@@ -97,7 +97,7 @@ export default function ContactPage() {
               <h2 className="font-serif text-2xl mb-3">Message envoyé</h2>
               <p className="text-sm text-muted mb-8">Nous vous répondrons dans les 48h.</p>
               <button onClick={() => { setStatus('idle'); setForm({ name: '', email: '', subject: '', message: '' }); }}
-                className="text-[11px] tracking-widest uppercase border border-stone px-6 py-2.5 text-muted hover:border-dark transition-colors">
+                className="text-[11px] tracking-widest uppercase border border-line px-6 py-2.5 text-muted hover:border-dark transition-colors">
                 Envoyer un autre message
               </button>
             </div>
@@ -141,11 +141,11 @@ export default function ContactPage() {
 
       {/* Footer minimal */}
       <footer className="bg-dark text-white px-4 md:px-10 py-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-3 text-[11px] text-white/30">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-3 text-[11px] text-white/55">
           <span>© 2026 Rue 25. Tous droits réservés.</span>
           <div className="flex flex-wrap gap-x-5 gap-y-1">
-            <Link to="/mentions-legales" className="hover:text-white/60 transition-colors">Mentions légales</Link>
-            <Link to="/politique-de-confidentialite" className="hover:text-white/60 transition-colors">Politique de confidentialité</Link>
+            <Link to="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
+            <Link to="/politique-de-confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link>
           </div>
         </div>
       </footer>

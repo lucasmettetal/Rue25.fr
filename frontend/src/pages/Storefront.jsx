@@ -32,13 +32,6 @@ const FOOTER_COLUMNS = [
   ]],
 ];
 
-const BANNER_ITEMS = [
-  '✦  Livraison offerte dès 150 €',
-  '✦  Pièces confectionnées à la main',
-  '✦  Matières naturelles & éthiques',
-  '✦  Retours gratuits sous 30 jours',
-];
-
 // Données structurées de l'accueil : elles identifient l'éditeur du site
 // auprès des moteurs de recherche.
 const HOME_JSONLD = {
@@ -105,15 +98,6 @@ export default function Storefront() {
         path="/"
         jsonLd={HOME_JSONLD} />
 
-      {/* Banner */}
-      <div className="bg-dark text-white overflow-hidden h-9 flex items-center">
-        <div className="flex banner-scroll whitespace-nowrap">
-          {[...BANNER_ITEMS, ...BANNER_ITEMS].map((item, i) => (
-            <span key={i} className="text-[11px] tracking-widest-xl uppercase px-10 text-white/80">{item}</span>
-          ))}
-        </div>
-      </div>
-
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-stone">
         <div className="max-w-7xl mx-auto px-4 md:px-10 flex items-center justify-between h-[68px]">
@@ -143,16 +127,16 @@ export default function Storefront() {
 
             {/* Connexion / Mon compte */}
             {user ? (
-              <Link to="/mon-compte" className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+              <Link to="/mon-compte" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
                 {user.firstName || 'Mon compte'}
               </Link>
             ) : (
-              <Link to="/connexion" className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+              <Link to="/connexion" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
                 Connexion
               </Link>
             )}
 
-            <Link to="/admin" className="hidden md:inline-flex text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+            <Link to="/admin" className="hidden md:inline-flex text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
               Admin
             </Link>
 
@@ -227,7 +211,7 @@ export default function Storefront() {
             {CATEGORIES.map(c => (
               <button key={c} onClick={() => setCategory(c)}
                 className={`text-[11px] tracking-[0.1em] uppercase px-4 py-2 border transition-all ${
-                  category === c ? 'bg-dark text-white border-dark' : 'border-stone text-muted hover:border-dark'
+                  category === c ? 'bg-dark text-white border-dark' : 'border-line text-muted hover:border-dark'
                 }`}>
                 {c}
               </button>
@@ -294,7 +278,7 @@ export default function Storefront() {
               className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
           <div>
-            <p className="text-[10px] tracking-[0.3em] text-accent uppercase mb-4">Notre atelier</p>
+            <p className="text-[10px] tracking-[0.3em] text-accent-ink uppercase mb-4">Notre atelier</p>
             <h3 className="font-serif text-[36px] md:text-[44px] font-normal leading-[1.2] mb-6">Rue 25,<br /><em>depuis 2019</em></h3>
             <p className="text-sm text-muted leading-relaxed mb-4">
               Installés au 25 de la rue des Artisans, nous confectionnons chaque vêtement à la main. Nos techniques viennent du compagnonnage, nos matières de fournisseurs éthiques.
@@ -305,7 +289,7 @@ export default function Storefront() {
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-stone">
               {[['100%', 'Fait main'], ['15h+', 'Par pièce'], ['2019', 'Fondation']].map(([v, l]) => (
                 <div key={l}>
-                  <div className="font-serif text-[28px] text-accent">{v}</div>
+                  <div className="font-serif text-[28px] text-accent-ink">{v}</div>
                   <div className="text-[11px] text-muted tracking-[0.1em] uppercase mt-1">{l}</div>
                 </div>
               ))}
@@ -324,11 +308,11 @@ export default function Storefront() {
                 <span className="font-serif text-xl">Rue</span>
                 <span className="font-serif text-2xl italic text-accent">25</span>
               </div>
-              <p className="text-xs text-white/45 leading-relaxed max-w-[200px]">Vêtements artisanaux façonnés avec passion et authenticité.</p>
+              <p className="text-xs text-white/60 leading-relaxed max-w-[200px]">Vêtements artisanaux façonnés avec passion et authenticité.</p>
             </div>
             {FOOTER_COLUMNS.map(([title, links]) => (
               <div key={title}>
-                <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">{title}</p>
+                <p className="text-[10px] tracking-[0.25em] text-white/55 mb-4">{title}</p>
                 {links.map(([label, to]) => (
                   to.startsWith('#')
                     ? <a key={label} href={to} className={FOOTER_LINK}>{label}</a>
@@ -340,8 +324,8 @@ export default function Storefront() {
                 adresse sans traitement derrière est trompeur (et non conforme au
                 RGPD). On oriente vers le formulaire de contact, qui fonctionne. */}
             <div className="col-span-2 md:col-span-1">
-              <p className="text-[10px] tracking-[0.25em] text-white/30 mb-4">NOUS ÉCRIRE</p>
-              <p className="text-xs text-white/45 leading-relaxed mb-4">
+              <p className="text-[10px] tracking-[0.25em] text-white/55 mb-4">NOUS ÉCRIRE</p>
+              <p className="text-xs text-white/60 leading-relaxed mb-4">
                 Une question sur une pièce ou un projet sur mesure ? Nous répondons sous 48 h.
               </p>
               <Link to="/contact"
@@ -350,12 +334,12 @@ export default function Storefront() {
               </Link>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/30">
+          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/55">
             <span>© 2026 Rue 25. Tous droits réservés.</span>
             <div className="flex flex-wrap gap-x-5 gap-y-1">
-              <Link to="/mentions-legales" className="hover:text-white/60 transition-colors">Mentions légales</Link>
-              <Link to="/politique-de-confidentialite" className="hover:text-white/60 transition-colors">Politique de confidentialité</Link>
-              <Link to="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+              <Link to="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
+              <Link to="/politique-de-confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
             </div>
           </div>
         </div>

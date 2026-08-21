@@ -71,7 +71,7 @@ export default function ProductPage() {
             <span className="font-serif text-[30px] italic text-accent">25</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to="/#catalogue" className="text-[10px] tracking-[0.15em] uppercase border border-stone text-muted px-3 py-1.5 hover:border-dark transition-colors">
+            <Link to="/#catalogue" className="text-[10px] tracking-[0.15em] uppercase border border-line text-muted px-3 py-1.5 hover:border-dark transition-colors">
               ← Boutique
             </Link>
             <button onClick={() => setCartOpen(true)} aria-label="Ouvrir le panier" className="flex items-center gap-2 text-dark">
@@ -118,7 +118,7 @@ export default function ProductPage() {
                 alt={product.name} />
 
               <div>
-                <p className="text-[10px] tracking-[0.25em] text-accent uppercase mb-3">{product.category}</p>
+                <p className="text-[10px] tracking-[0.25em] text-accent-ink uppercase mb-3">{product.category}</p>
                 <h1 className="font-serif text-4xl md:text-5xl font-normal leading-tight mb-4">{product.name}</h1>
                 <p className="text-[26px] font-light mb-8">{Number(product.price).toFixed(2)} €</p>
 
@@ -156,7 +156,7 @@ export default function ProductPage() {
                         <button key={s} onClick={() => setSize(s)}
                           aria-pressed={size === s}
                           className={`px-4 py-2 text-sm border transition-all ${
-                            size === s ? 'bg-dark text-white border-dark' : 'border-stone hover:border-dark'
+                            size === s ? 'bg-dark text-white border-dark' : 'border-line hover:border-dark'
                           }`}>
                           {s}
                         </button>
@@ -187,12 +187,12 @@ export default function ProductPage() {
       </main>
 
       <footer className="bg-dark text-white px-4 md:px-10 py-8">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/30">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between gap-3 text-[11px] text-white/55">
           <span>© 2026 {SITE_NAME}. Tous droits réservés.</span>
           <div className="flex flex-wrap gap-x-5 gap-y-1">
-            <Link to="/mentions-legales" className="hover:text-white/60 transition-colors">Mentions légales</Link>
-            <Link to="/politique-de-confidentialite" className="hover:text-white/60 transition-colors">Politique de confidentialité</Link>
-            <Link to="/contact" className="hover:text-white/60 transition-colors">Contact</Link>
+            <Link to="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
+            <Link to="/politique-de-confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link>
+            <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
       </footer>

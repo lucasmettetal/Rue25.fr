@@ -70,7 +70,7 @@ export default function SurMesurePage() {
         <main>
           {/* Hero */}
           <section className="max-w-4xl mx-auto px-4 md:px-10 pt-10 md:pt-16 pb-10">
-            <p className="text-[10px] tracking-[0.35em] uppercase text-accent mb-4">Service exclusif</p>
+            <p className="text-[10px] tracking-[0.35em] uppercase text-accent-ink mb-4">Service exclusif</p>
             <h1 className="font-serif text-[36px] md:text-[52px] font-normal leading-[1.1] mb-6">
               Votre vêtement,<br /><em>sur mesure</em>
             </h1>
@@ -80,7 +80,7 @@ export default function SurMesurePage() {
             <div className="flex gap-10 pt-8 border-t border-stone mt-8">
               {[['3–6 mois', 'Délai de création'], ['100%', 'Fait main'], ['Unique', 'Pièce exclusive']].map(([v, l]) => (
                 <div key={l}>
-                  <div className="font-serif text-2xl text-accent">{v}</div>
+                  <div className="font-serif text-2xl text-accent-ink">{v}</div>
                   <div className="text-[11px] text-muted tracking-widest uppercase mt-1">{l}</div>
                 </div>
               ))}
@@ -191,7 +191,7 @@ export default function SurMesurePage() {
 function SectionTitle({ num, label, sub }) {
   return (
     <div className="flex items-baseline gap-3 mb-5 pb-3 border-b border-stone">
-      <span className="font-serif text-[13px] text-accent">{num}</span>
+      <span className="font-serif text-[13px] text-accent-ink">{num}</span>
       <span className="font-serif text-xl font-normal">{label}</span>
       {sub && <span className="text-xs text-muted">{sub}</span>}
     </div>
@@ -214,7 +214,7 @@ function SuccessView({ reference }) {
       <div className="text-5xl mb-6">✓</div>
       <h2 className="font-serif text-3xl mb-2">Demande envoyée !</h2>
       <p className="text-muted text-sm mb-1">Nous avons bien reçu votre demande sur mesure.</p>
-      <p className="text-accent font-mono text-sm font-medium tracking-widest mb-3">{reference}</p>
+      <p className="text-accent-ink font-mono text-sm font-medium tracking-widest mb-3">{reference}</p>
       <p className="text-muted text-sm mb-10 max-w-sm">
         Notre équipe vous contactera sous 48h pour discuter de votre projet et vous envoyer un devis personnalisé.
       </p>

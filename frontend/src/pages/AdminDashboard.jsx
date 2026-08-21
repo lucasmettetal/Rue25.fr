@@ -91,14 +91,14 @@ export default function AdminDashboard() {
             <span className="font-serif text-xl">Rue</span>
             <span className="font-serif text-2xl italic text-accent">25</span>
           </div>
-          <p className="text-[9px] tracking-[0.25em] text-white/30 uppercase mt-1">Administration</p>
+          <p className="text-[9px] tracking-[0.25em] text-white/55 uppercase mt-1">Administration</p>
         </div>
 
         <nav className="flex-1 p-3 pt-4">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`w-full text-left flex items-center gap-3 px-4 py-2.5 mb-1 rounded-md text-sm transition-all ${
-                tab === t.id ? 'bg-white/12 text-white' : 'text-white/45 hover:text-white/70'
+                tab === t.id ? 'bg-white/12 text-white' : 'text-white/60 hover:text-white/70'
               }`}>
               <span className="opacity-60">{t.icon}</span>{t.label}
             </button>
@@ -106,9 +106,9 @@ export default function AdminDashboard() {
         </nav>
 
         <div className="px-6 pb-6">
-          <p className="text-[10px] text-white/25 mb-3 truncate">{admin?.email}</p>
+          <p className="text-[10px] text-white/55 mb-3 truncate">{admin?.email}</p>
           <button onClick={() => { logout(); navigate('/admin'); }}
-            className="w-full border border-white/12 text-white/35 text-xs uppercase tracking-widest py-2.5 hover:text-white/60">
+            className="w-full border border-white/35 text-white/70 text-xs uppercase tracking-widest py-2.5 hover:text-white">
             Déconnexion
           </button>
         </div>
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
             <div className="bg-white border border-stone">
               <div className="px-7 py-4 border-b border-stone flex justify-between items-center">
                 <span className="text-sm font-medium">Dernières commandes</span>
-                <button onClick={() => setTab('orders')} className="text-xs text-accent">Voir tout →</button>
+                <button onClick={() => setTab('orders')} className="text-xs text-accent-ink">Voir tout →</button>
               </div>
               <OrderTable orders={orders.slice(0, 4)} onStatusChange={handleStatusChange} compact />
             </div>
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
                   <tbody>
                     {customOrders.map((c, i) => (
                       <tr key={c.id} className={i < customOrders.length - 1 ? 'border-b border-stone' : ''}>
-                        <td className="px-5 py-4 text-xs font-mono text-accent font-medium">{c.reference}</td>
+                        <td className="px-5 py-4 text-xs font-mono text-accent-ink font-medium">{c.reference}</td>
                         <td className="px-5 py-4 text-xs text-muted">{new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
                         <td className="px-5 py-4">
                           <p className="text-sm font-medium">{c.name}</p>
@@ -267,7 +267,7 @@ function OrderTable({ orders, onStatusChange, compact }) {
       <tbody>
         {orders.map((o, i) => (
           <tr key={o.id} className={i < orders.length - 1 ? 'border-b border-stone' : ''}>
-            <td className="px-5 py-4 text-xs font-mono text-accent font-medium">{o.reference}</td>
+            <td className="px-5 py-4 text-xs font-mono text-accent-ink font-medium">{o.reference}</td>
             <td className="px-5 py-4 text-xs text-muted">{new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
             <td className="px-5 py-4">
               <p className="text-sm font-medium">{o.customer_name}</p>
@@ -302,13 +302,13 @@ function AdminProductCard({ product, onEdit, onToggleStock, onDelete }) {
       <div className="p-4">
         <div className="flex justify-between items-baseline mb-1">
           <span className="text-sm font-medium">{product.name}</span>
-          <span className="text-sm text-accent font-medium">{Number(product.price).toFixed(2)} €</span>
+          <span className="text-sm text-accent-ink font-medium">{Number(product.price).toFixed(2)} €</span>
         </div>
         <p className="text-xs text-muted mb-2">{product.category}</p>
         <p className="text-xs text-muted mb-4">Quantité disponible : {product.quantity ?? 0}</p>
         <div className="flex gap-2">
-          <button onClick={onEdit} className="flex-1 border border-stone text-xs uppercase tracking-widest py-2 text-muted hover:border-dark">Modifier</button>
-          <button onClick={onToggleStock} className="flex-1 border border-stone text-xs uppercase tracking-widest py-2 text-muted hover:border-dark">
+          <button onClick={onEdit} className="flex-1 border border-line text-xs uppercase tracking-widest py-2 text-muted hover:border-dark">Modifier</button>
+          <button onClick={onToggleStock} className="flex-1 border border-line text-xs uppercase tracking-widest py-2 text-muted hover:border-dark">
             {product.in_stock ? 'Désactiver' : 'Activer'}
           </button>
           <button onClick={onDelete} className="bg-red-600 text-white text-xs px-3 py-2 hover:bg-red-700">✕</button>
@@ -537,10 +537,10 @@ function ProductForm({ product, onClose, onSave }) {
                 placeholder={images.length >= MAX_IMAGES ? 'Maximum atteint' : 'Coller une adresse https://…'}
                 className="flex-1 px-4 py-2 text-sm disabled:opacity-50" />
               <button type="button" onClick={addImageUrl} disabled={images.length >= MAX_IMAGES}
-                className="border border-stone text-xs px-4 text-muted hover:border-dark disabled:opacity-50">Ajouter</button>
+                className="border border-line text-xs px-4 text-muted hover:border-dark disabled:opacity-50">Ajouter</button>
               <button type="button" onClick={() => fileRef.current?.click()}
                 disabled={uploading || images.length >= MAX_IMAGES}
-                className="border border-stone text-xs px-4 text-muted hover:border-dark whitespace-nowrap disabled:opacity-50">
+                className="border border-line text-xs px-4 text-muted hover:border-dark whitespace-nowrap disabled:opacity-50">
                 {uploading ? 'Envoi…' : 'Choisir des fichiers'}
               </button>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageFiles} />
@@ -558,12 +558,12 @@ function ProductForm({ product, onClose, onSave }) {
                 <video src={api.assetUrl(form.video_url)} controls preload="metadata"
                   className="w-48 aspect-video bg-stone border border-stone object-cover" />
                 <button type="button" onClick={() => set('video_url', '')}
-                  className="border border-stone text-xs px-4 py-2 text-muted hover:border-dark">Retirer</button>
+                  className="border border-line text-xs px-4 py-2 text-muted hover:border-dark">Retirer</button>
               </div>
             ) : (
               <div className="flex gap-2">
                 <button type="button" onClick={() => videoRef.current?.click()} disabled={uploadingVideo}
-                  className="border border-stone text-xs px-4 py-2 text-muted hover:border-dark disabled:opacity-50">
+                  className="border border-line text-xs px-4 py-2 text-muted hover:border-dark disabled:opacity-50">
                   {uploadingVideo ? 'Envoi…' : 'Choisir une vidéo'}
                 </button>
                 <input ref={videoRef} type="file" accept="video/mp4,video/webm" className="hidden" onChange={handleVideoFile} />
@@ -583,7 +583,7 @@ function ProductForm({ product, onClose, onSave }) {
               {Object.entries(SIZE_SCALES).map(([key, { label }]) => (
                 <button key={key} type="button" onClick={() => setScale(key)}
                   className={`text-[11px] px-3 py-1.5 border transition-colors ${
-                    scale === key ? 'bg-dark text-white border-dark' : 'border-stone text-muted hover:border-dark'
+                    scale === key ? 'bg-dark text-white border-dark' : 'border-line text-muted hover:border-dark'
                   }`}>
                   {label}
                 </button>
@@ -596,7 +596,7 @@ function ProductForm({ product, onClose, onSave }) {
                 return (
                   <label key={size}
                     className={`text-xs px-3.5 py-2 border cursor-pointer select-none transition-colors ${
-                      checked ? 'bg-dark text-white border-dark' : 'border-stone text-muted hover:border-dark'
+                      checked ? 'bg-dark text-white border-dark' : 'border-line text-muted hover:border-dark'
                     }`}>
                     <input type="checkbox" checked={checked} onChange={() => toggleSize(size)} className="sr-only" />
                     {size}
@@ -610,7 +610,7 @@ function ProductForm({ product, onClose, onSave }) {
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtraSize())}
                 placeholder="Taille hors barème : 42 long, 3 ans…" className="flex-1 px-4 py-2 text-sm" />
               <button type="button" onClick={addExtraSize}
-                className="border border-stone text-xs px-4 text-muted hover:border-dark">Ajouter</button>
+                className="border border-line text-xs px-4 text-muted hover:border-dark">Ajouter</button>
             </div>
 
             {horsBareme.length > 0 && (
@@ -656,7 +656,7 @@ function ProductForm({ product, onClose, onSave }) {
 
             <div className="flex items-center justify-between mt-2">
               <button type="button" onClick={() => setComposition(c => [...c, { percent: '', fibre: '' }])}
-                className="border border-stone text-xs px-4 py-2 text-muted hover:border-dark">+ Ajouter une fibre</button>
+                className="border border-line text-xs px-4 py-2 text-muted hover:border-dark">+ Ajouter une fibre</button>
               {composition.length > 0 && (
                 <span className={`text-xs ${compositionIncomplete ? 'text-amber-700' : 'text-green-700'}`}>
                   Total : {Math.round(total * 10) / 10} %
@@ -685,7 +685,7 @@ function ProductForm({ product, onClose, onSave }) {
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addDetail())}
                 placeholder="Boutons en nacre…" className="flex-1 px-4 py-2 text-sm" />
               <button type="button" onClick={addDetail}
-                className="border border-stone text-xs px-4 text-muted hover:border-dark">Ajouter</button>
+                className="border border-line text-xs px-4 text-muted hover:border-dark">Ajouter</button>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -709,7 +709,7 @@ function ProductForm({ product, onClose, onSave }) {
         </div>
 
         <div className="px-8 pb-7 flex gap-3 justify-end">
-          <button onClick={onClose} className="border border-stone text-muted text-xs uppercase tracking-widest px-6 py-2.5 hover:border-dark">Annuler</button>
+          <button onClick={onClose} className="border border-line text-muted text-xs uppercase tracking-widest px-6 py-2.5 hover:border-dark">Annuler</button>
           <button onClick={save} disabled={loading} className="bg-accent text-white text-xs uppercase tracking-widest px-6 py-2.5 disabled:opacity-50">
             {loading ? '…' : product ? 'Enregistrer' : 'Créer le produit'}
           </button>
